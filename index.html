@@ -1,0 +1,2659 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=1280" />
+<title>Prompt Builder — Fashion Marketplace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FAFAF7;
+  --bg-panel: #F3F3EE;
+  --bg-elev: #FFFFFF;
+  --ink: #1A1A1A;
+  --ink-soft: #2B2B28;
+  --muted: #6B6B66;
+  --muted-2: #94948E;
+  --border: #EAEAE4;
+  --border-strong: #D8D8D0;
+  --accent: #4A5240;
+  --accent-soft: #4A524015;
+  --accent-hover: #3c4234;
+  --danger: #8a3a2a;
+  --warn-bg: #f0ecd8;
+
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+
+  --radius: 8px;
+  --radius-sm: 6px;
+
+  --shadow-sm: 0 1px 2px rgba(26,26,26,0.04);
+  --shadow-pop: 0 8px 32px -12px rgba(26,26,26,0.18);
+
+  --dur: 240ms;
+  --ease: cubic-bezier(.2,.7,.2,1);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: 'cv11','ss01';
+}
+
+button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+input, textarea { font-family: inherit; color: inherit; }
+
+/* ---------- HEADER ---------- */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  height: 56px;
+  background: rgba(250,250,247,0.88);
+  backdrop-filter: saturate(140%) blur(10px);
+  -webkit-backdrop-filter: saturate(140%) blur(10px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
+  gap: 20px;
+}
+.brand {
+  display: flex; align-items: center; gap: 10px;
+  font-weight: 500; font-size: 13.5px; letter-spacing: -0.01em;
+}
+.brand-mark {
+  width: 22px; height: 22px; border-radius: 4px;
+  background: var(--ink);
+  position: relative;
+}
+.brand-mark::after {
+  content: ""; position: absolute; inset: 5px 5px auto auto;
+  width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+}
+.brand-slash { color: var(--muted-2); font-weight: 400; margin: 0 2px; }
+.brand-sub { color: var(--muted); font-weight: 400; }
+
+.header-progress {
+  flex: 1;
+  display: flex; align-items: center; gap: 14px;
+  max-width: 520px;
+}
+.progress-track {
+  flex: 1; height: 2px; background: var(--border); border-radius: 2px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%; background: var(--accent);
+  transition: width var(--dur) var(--ease);
+}
+.progress-text {
+  font-size: 12px; color: var(--muted); white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.header-actions {
+  margin-left: auto;
+  display: flex; align-items: center; gap: 6px;
+}
+.hbtn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 11px; font-size: 12.5px; color: var(--muted);
+  border-radius: 6px; transition: all 160ms var(--ease);
+}
+.hbtn:hover { color: var(--ink); background: rgba(0,0,0,0.03); }
+.hbtn svg { width: 14px; height: 14px; }
+
+/* ---------- LAYOUT ---------- */
+.app-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 6px var(--right-col, 520px);
+  gap: 0;
+  min-height: calc(100vh - 56px);
+}
+@media (min-width: 1400px) {
+  .app-body { grid-template-columns: 180px minmax(0, 1fr) 6px var(--right-col, 520px); }
+}
+
+.outline-col {
+  display: none;
+  position: sticky;
+  top: 56px;
+  height: calc(100vh - 56px);
+  padding: 24px 0 24px 16px;
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  flex-direction: column;
+}
+@media (min-width: 1400px) {
+  .outline-col { display: flex; }
+}
+
+.left-col {
+  padding: 32px 40px 120px 40px;
+  max-width: 820px;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  min-width: 0;
+}
+
+.col-resizer {
+  position: relative;
+  cursor: col-resize;
+  background: transparent;
+  transition: background 160ms var(--ease);
+  user-select: none;
+  z-index: 20;
+}
+.col-resizer::before {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0;
+  left: 50%;
+  width: 1px;
+  background: var(--border);
+  transform: translateX(-50%);
+}
+.col-resizer::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2px;
+  height: 34px;
+  background: var(--border-strong);
+  border-radius: 2px;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  transition: opacity 160ms var(--ease);
+}
+.col-resizer:hover::after,
+.col-resizer.is-dragging::after { opacity: 1; }
+.col-resizer:hover::before,
+.col-resizer.is-dragging::before { background: var(--ink); }
+.col-resizer.is-dragging {
+  background: rgba(74, 82, 64, 0.06);
+}
+body.is-col-dragging {
+  cursor: col-resize !important;
+  user-select: none;
+}
+body.is-col-dragging * { user-select: none !important; }
+
+.right-col {
+  border-left: none;
+  background: var(--bg-panel);
+  position: sticky;
+  top: 56px;
+  height: calc(100vh - 56px);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* ---------- SECTION ---------- */
+.section {
+  margin-bottom: 44px;
+  scroll-margin-top: 80px;
+}
+.section-head {
+  display: flex; align-items: baseline; gap: 14px;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.section-num {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted-2);
+  letter-spacing: 0.04em;
+}
+.section-title {
+  font-size: 18px; font-weight: 500; letter-spacing: -0.015em;
+  margin: 0;
+}
+.section-caption {
+  color: var(--muted); font-size: 13px; margin-left: auto;
+}
+
+/* ---------- STEP CARD ---------- */
+.step {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  margin-bottom: 12px;
+  transition: border-color 160ms var(--ease), box-shadow 160ms var(--ease);
+  animation: stepIn var(--dur) var(--ease) both;
+}
+.step.is-filled {
+  border-color: var(--border-strong);
+}
+.step.is-flash { box-shadow: 0 0 0 2px var(--accent-soft); }
+
+@keyframes stepIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.step-head {
+  display: flex; align-items: baseline; gap: 10px;
+  margin-bottom: 14px;
+}
+.step-label {
+  font-size: 15px; font-weight: 500; letter-spacing: -0.01em;
+}
+.step-hint {
+  color: var(--muted); font-size: 12.5px;
+}
+.step-tag {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 8px;
+  letter-spacing: 0.02em;
+  text-transform: lowercase;
+}
+.step-tag.req { color: var(--accent); border-color: var(--accent); }
+.step-clear {
+  font-size: 11.5px; color: var(--muted); padding: 4px 6px; border-radius: 4px;
+  transition: color 160ms;
+}
+.step-clear:hover { color: var(--ink); }
+.step-skip {
+  font-size: 12px; color: var(--muted); text-decoration: underline;
+  text-decoration-color: var(--border-strong);
+  text-underline-offset: 3px;
+}
+.step-skip:hover { color: var(--ink); }
+
+/* ---------- CHIPS ---------- */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 12px;
+  font-size: 13px;
+  color: var(--ink-soft);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  transition: all 140ms var(--ease);
+  white-space: nowrap;
+}
+.chip:hover {
+  border-color: var(--border-strong);
+  background: #fff;
+}
+.chip.is-active {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+}
+.chip.is-active .chip-sub { color: rgba(255,255,255,0.6); }
+.chip-sub {
+  font-size: 11.5px; color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- GRID (radio buttons larger) ---------- */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 6px;
+}
+.grid.compact {
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+}
+.tile {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: all 140ms var(--ease);
+  text-align: left;
+  color: var(--ink-soft);
+}
+.tile:hover { border-color: var(--border-strong); background: #fff; }
+.tile.is-active {
+  border-color: var(--ink);
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--ink);
+  color: var(--ink);
+}
+.tile-swatch {
+  width: 18px; height: 18px; border-radius: 4px;
+  flex-shrink: 0;
+  border: 1px solid rgba(0,0,0,0.08);
+}
+
+/* ---------- SWATCH GRID (color) ---------- */
+.swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 8px;
+}
+.swatch {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 8px 6px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: all 140ms var(--ease);
+}
+.swatch:hover { border-color: var(--border-strong); background: #fff; }
+.swatch.is-active {
+  border-color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--ink);
+  background: #fff;
+}
+.swatch-dot {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 1px solid rgba(0,0,0,0.1);
+}
+.swatch-label {
+  font-size: 11.5px; color: var(--muted); text-align: center; line-height: 1.25;
+}
+.swatch.is-active .swatch-label { color: var(--ink); }
+
+/* ---------- ASPECT ---------- */
+.aspect-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.aspect {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 12px 18px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: all 140ms var(--ease);
+  min-width: 72px;
+}
+.aspect:hover { border-color: var(--border-strong); background: #fff; }
+.aspect.is-active {
+  border-color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--ink);
+  background: #fff;
+}
+.aspect-box {
+  border: 1.5px solid var(--ink-soft);
+  border-radius: 2px;
+  opacity: 0.7;
+}
+.aspect.is-active .aspect-box { opacity: 1; }
+.aspect-label { font-size: 12px; font-family: var(--font-mono); color: var(--muted); }
+.aspect.is-active .aspect-label { color: var(--ink); }
+
+/* ---------- TEXT INPUT ---------- */
+.text-input {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13.5px;
+  transition: all 140ms var(--ease);
+  resize: vertical;
+  min-height: 40px;
+}
+.text-input:focus {
+  outline: none;
+  border-color: var(--ink);
+  background: #fff;
+}
+
+/* ---------- TOAST ---------- */
+.toast-stack {
+  position: fixed;
+  bottom: 24px;
+  left: 40px;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.toast {
+  padding: 10px 14px;
+  background: var(--ink);
+  color: #fff;
+  border-radius: 6px;
+  font-size: 12.5px;
+  max-width: 360px;
+  box-shadow: var(--shadow-pop);
+  animation: toastIn 220ms var(--ease) both;
+}
+.toast.warn { background: var(--warn-bg); color: var(--ink); }
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- RIGHT COLUMN / PREVIEW ---------- */
+.preview-head {
+  padding: 20px 24px 16px 24px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.preview-tabs {
+  display: flex; gap: 2px;
+  padding: 3px;
+  background: rgba(26,26,26,0.04);
+  border-radius: 8px;
+  width: fit-content;
+  font-size: 12.5px;
+}
+.preview-tab {
+  padding: 6px 12px;
+  border-radius: 6px;
+  color: var(--muted);
+  transition: all 140ms var(--ease);
+}
+.preview-tab.is-active {
+  background: #fff;
+  color: var(--ink);
+  box-shadow: var(--shadow-sm);
+}
+
+.preview-meta {
+  margin-top: 14px;
+  display: flex; align-items: center; gap: 12px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.preview-meta-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent);
+}
+.preview-meta .num { color: var(--ink); font-weight: 500; font-variant-numeric: tabular-nums; }
+
+.preview-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px 24px 24px;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: var(--ink-soft);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.preview-body::-webkit-scrollbar { width: 8px; }
+.preview-body::-webkit-scrollbar-track { background: transparent; }
+.preview-body::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+.preview-body::-webkit-scrollbar-thumb:hover { background: var(--muted-2); }
+
+.preview-section-title {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 14px;
+  margin-bottom: 4px;
+}
+.preview-section-title:first-child { margin-top: 0; }
+.preview-dyn {
+  background: var(--accent-soft);
+  color: var(--accent);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-weight: 500;
+}
+.preview-placeholder {
+  background: rgba(184, 92, 60, 0.08);
+  color: #8a4228;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-style: italic;
+  letter-spacing: 0.02em;
+}
+
+.preview-static-toggle {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--font-sans);
+  font-size: 11.5px;
+  color: var(--muted);
+  padding: 6px 0;
+  text-align: left;
+  width: 100%;
+  border-top: 1px dashed var(--border);
+  border-bottom: 1px dashed var(--border);
+  margin: 14px 0 10px 0;
+  transition: color 140ms;
+}
+.preview-static-toggle:hover { color: var(--ink); }
+.preview-static-toggle .chev {
+  transition: transform 200ms var(--ease);
+}
+.preview-static-toggle.is-open .chev { transform: rotate(90deg); }
+
+.preview-textarea {
+  width: 100%;
+  flex: 1;
+  padding: 16px 20px;
+  border: none;
+  background: var(--bg-panel);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: var(--ink-soft);
+  resize: none;
+  outline: none;
+}
+
+.preview-actions {
+  padding: 14px 20px;
+  border-top: 1px solid var(--border);
+  display: flex; gap: 8px;
+  background: var(--bg-panel);
+  flex-shrink: 0;
+}
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 11px 16px;
+  font-size: 13.5px;
+  font-weight: 500;
+  border-radius: 7px;
+  transition: all 160ms var(--ease);
+  letter-spacing: -0.005em;
+}
+.btn svg { width: 15px; height: 15px; }
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  flex: 1;
+}
+.btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-primary.is-copied { background: var(--ink); }
+
+.btn-ghost {
+  color: var(--muted);
+  padding: 11px 14px;
+}
+.btn-ghost:hover { color: var(--ink); background: rgba(0,0,0,0.04); }
+
+.btn-outline {
+  border: 1px solid var(--border-strong);
+  color: var(--ink-soft);
+  background: #fff;
+}
+.btn-outline:hover { border-color: var(--ink); color: var(--ink); }
+
+/* ---------- PRESETS MODAL/SHEET ---------- */
+.sheet-backdrop {
+  position: fixed; inset: 0; z-index: 150;
+  background: rgba(26,26,26,0.35);
+  animation: fadeIn 180ms var(--ease) both;
+}
+@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+.sheet {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  width: 520px; max-width: calc(100vw - 40px);
+  max-height: 80vh;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-pop);
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  animation: sheetIn 220ms var(--ease) both;
+  z-index: 160;
+}
+@keyframes sheetIn {
+  from { opacity: 0; transform: translate(-50%, -46%); }
+  to { opacity: 1; transform: translate(-50%, -50%); }
+}
+.sheet-head {
+  display: flex; align-items: center; gap: 12px;
+  padding: 18px 22px 14px 22px;
+  border-bottom: 1px solid var(--border);
+}
+.sheet-head h3 {
+  margin: 0; font-size: 15px; font-weight: 500; letter-spacing: -0.01em;
+}
+.sheet-close {
+  margin-left: auto;
+  width: 28px; height: 28px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--muted);
+  transition: all 140ms;
+}
+.sheet-close:hover { background: rgba(0,0,0,0.05); color: var(--ink); }
+
+.sheet-body { padding: 16px 22px; overflow-y: auto; }
+.sheet-foot {
+  padding: 14px 22px;
+  border-top: 1px solid var(--border);
+  display: flex; gap: 8px;
+}
+
+.preset-form { display: flex; gap: 6px; margin-bottom: 16px; }
+.preset-form .text-input { flex: 1; }
+.preset-form .btn { padding: 8px 14px; font-size: 13px; }
+
+.preset-list { display: flex; flex-direction: column; gap: 4px; }
+.preset-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: #fff;
+  transition: border-color 140ms;
+}
+.preset-item:hover { border-color: var(--border-strong); }
+.preset-name { font-size: 13.5px; font-weight: 500; }
+.preset-meta { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+.preset-actions { margin-left: auto; display: flex; gap: 2px; }
+.preset-actions button {
+  padding: 5px 9px; font-size: 12px; color: var(--muted);
+  border-radius: 5px; transition: all 140ms;
+}
+.preset-actions button:hover { color: var(--ink); background: rgba(0,0,0,0.04); }
+.preset-actions .del:hover { color: var(--danger); }
+
+.empty-presets {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 8px;
+}
+
+/* ---------- Left outline (quick jump) ---------- */
+.outline {
+  width: 100%;
+  font-size: 12px;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ---------- Product group (multi-category) ---------- */
+.product-group {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 12px;
+  overflow: hidden;
+  animation: stepIn var(--dur) var(--ease) both;
+}
+.product-group-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 22px;
+  background: var(--bg-elev);
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.product-group .step {
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  margin-bottom: 0;
+  animation: none;
+  background: var(--bg-elev);
+}
+.product-group .step:last-child { border-bottom: none; }
+.outline a {
+  color: var(--muted);
+  text-decoration: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  display: flex; align-items: center; gap: 8px;
+  transition: all 140ms;
+  border-left: 1px solid var(--border);
+}
+.outline a:hover { color: var(--ink); border-left-color: var(--ink); }
+.outline a.is-active {
+  color: var(--ink); border-left-color: var(--accent); font-weight: 500;
+}
+.outline-count {
+  font-family: var(--font-mono); font-size: 10.5px; color: var(--muted-2);
+  margin-left: auto;
+}
+
+/* ---------- Empty state helpers ---------- */
+.hero {
+  padding: 4px 0 24px 0;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.hero-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted-2);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.hero h1 {
+  font-size: 28px; font-weight: 500; margin: 0 0 10px 0;
+  letter-spacing: -0.02em; line-height: 1.2;
+  max-width: 580px;
+}
+.hero-lead {
+  color: var(--muted); font-size: 14px; max-width: 520px; margin: 0;
+}
+
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script>// Каталог фильтров. Каждая опция имеет labelRu + promptText (англ., идёт в промт).
+
+window.FILTERS = {
+  gender: {
+    label: 'Пол модели',
+    hint: 'Базовый параметр — от него зависят опции ниже',
+    required: true,
+    kind: 'chips',
+    options: [
+      { id: 'male', labelRu: 'Мужчина', promptText: 'man' },
+      { id: 'female', labelRu: 'Женщина', promptText: 'woman' },
+      { id: 'from_reference', labelRu: 'С референса', promptText: null },
+    ],
+  },
+  ageGroup: {
+    label: 'Возраст',
+    required: true,
+    kind: 'chips',
+    options: [
+      { id: 'teen', labelRu: 'Подросток', sub: '16–19', promptText: 'a teenager (16–19 years old)' },
+      { id: 'young', labelRu: 'Молодой', sub: '20–29', promptText: 'a young adult (20–29 years old)' },
+      { id: 'adult', labelRu: 'Взрослый', sub: '30–45', promptText: 'an adult (30–45 years old)' },
+      { id: 'mature', labelRu: 'Зрелый', sub: '45–60', promptText: 'a mature adult (45–60 years old)' },
+      { id: 'senior', labelRu: 'Пожилой', sub: '60+', promptText: 'a senior (60+ years old)' },
+    ],
+  },
+  ethnicity: {
+    label: 'Тип внешности',
+    optional: true,
+    kind: 'grid',
+    options: [
+      { id: 'slavic', labelRu: 'Славянская', promptText: 'slavic' },
+      { id: 'european', labelRu: 'Западноевропейская', promptText: 'european' },
+      { id: 'scandinavian', labelRu: 'Скандинавская', promptText: 'scandinavian' },
+      { id: 'mediterranean', labelRu: 'Средиземноморская', promptText: 'mediterranean' },
+      { id: 'asian_east', labelRu: 'Восточноазиатская', promptText: 'east asian' },
+      { id: 'asian_central', labelRu: 'Центральноазиатская', promptText: 'central asian' },
+      { id: 'south_asian', labelRu: 'Южноазиатская', promptText: 'south asian' },
+      { id: 'african', labelRu: 'Африканская', promptText: 'african' },
+      { id: 'latino', labelRu: 'Латиноамериканская', promptText: 'latino' },
+      { id: 'middle_eastern', labelRu: 'Ближневосточная', promptText: 'middle eastern' },
+      { id: 'mixed', labelRu: 'Смешанная', promptText: 'mixed-race' },
+    ],
+  },
+  bodyType: {
+    label: 'Телосложение',
+    optional: true,
+    kind: 'chips',
+    options: [
+      { id: 'slim', labelRu: 'Стройное', promptText: 'slim build' },
+      { id: 'athletic', labelRu: 'Атлетичное', promptText: 'athletic build' },
+      { id: 'average', labelRu: 'Среднее', promptText: 'average build' },
+      { id: 'curvy', labelRu: 'С изгибами', promptText: 'curvy build', onlyGender: 'female' },
+      { id: 'muscular', labelRu: 'Мускулистое', promptText: 'muscular build', onlyGender: 'male' },
+      { id: 'plus_size', labelRu: 'Plus-size', promptText: 'plus-size' },
+    ],
+  },
+  hairLength: {
+    label: 'Длина волос',
+    optional: true,
+    kind: 'chips',
+    options: [
+      { id: 'bald', labelRu: 'Бритый налысо', promptText: 'shaved head' },
+      { id: 'very_short', labelRu: 'Очень короткие', promptText: 'very short hair' },
+      { id: 'short', labelRu: 'Короткие', promptText: 'short hair' },
+      { id: 'medium', labelRu: 'Средние', sub: 'до плеч', promptText: 'medium-length hair' },
+      { id: 'long', labelRu: 'Длинные', promptText: 'long hair' },
+      { id: 'very_long', labelRu: 'Очень длинные', promptText: 'very long hair' },
+    ],
+  },
+  hairColor: {
+    label: 'Цвет волос',
+    required: true,
+    kind: 'grid',
+    options: [
+      { id: 'black', labelRu: 'Чёрный', promptText: 'black', swatch: '#1a1a1a' },
+      { id: 'dark_brown', labelRu: 'Тёмно-каштановый', promptText: 'dark brown', swatch: '#3b2416' },
+      { id: 'brown', labelRu: 'Каштановый', promptText: 'brown', swatch: '#6b4423' },
+      { id: 'light_brown', labelRu: 'Светло-русый', promptText: 'light brown', swatch: '#a67c52' },
+      { id: 'blonde', labelRu: 'Блонд', promptText: 'blonde', swatch: '#d9b382' },
+      { id: 'platinum', labelRu: 'Платиновый', promptText: 'platinum blonde', swatch: '#ebe2cf' },
+      { id: 'red', labelRu: 'Рыжий', promptText: 'red', swatch: '#a04524' },
+      { id: 'grey', labelRu: 'Седой', promptText: 'grey', swatch: '#9a9a95' },
+      { id: 'white', labelRu: 'Белый', promptText: 'white', swatch: '#f0eee6' },
+      { id: 'dyed_unusual', labelRu: 'Крашеный яркий', promptText: 'unnaturally dyed', swatch: 'linear-gradient(135deg,#b85c3c,#4a5240)' },
+    ],
+  },
+  facialHair: {
+    label: 'Борода и усы',
+    required: true,
+    kind: 'chips',
+    options: [
+      { id: 'clean_shaven', labelRu: 'Гладко выбрит', promptText: 'clean-shaven' },
+      { id: 'stubble', labelRu: 'Щетина', promptText: 'light stubble' },
+      { id: 'short_beard', labelRu: 'Короткая борода', promptText: 'a short beard' },
+      { id: 'full_beard', labelRu: 'Полная борода', promptText: 'a full beard' },
+      { id: 'goatee', labelRu: 'Козлиная бородка', promptText: 'a goatee' },
+      { id: 'mustache', labelRu: 'Только усы', promptText: 'a mustache only' },
+    ],
+  },
+  features: {
+    label: 'Особенности',
+    hint: 'Можно выбрать несколько',
+    optional: true,
+    multi: true,
+    kind: 'chips',
+    options: [
+      { id: 'visible_tattoo', labelRu: 'Видимые татуировки', promptText: 'visible tattoos' },
+      { id: 'glasses_optical', labelRu: 'Очки', promptText: 'glasses' },
+      { id: 'glasses_sun', labelRu: 'Солнцезащитные очки', promptText: 'sunglasses' },
+      { id: 'freckles', labelRu: 'Веснушки', promptText: 'freckles' },
+      { id: 'earrings', labelRu: 'Серьги', promptText: 'earrings' },
+    ],
+  },
+
+  productGender: {
+    label: 'Кому товар',
+    required: true,
+    kind: 'chips',
+    options: [
+      { id: 'men', labelRu: 'Мужской', promptText: "men's" },
+      { id: 'women', labelRu: 'Женский', promptText: "women's" },
+      { id: 'unisex', labelRu: 'Унисекс', promptText: 'unisex' },
+      { id: 'kids', labelRu: 'Детский', promptText: "kids'" },
+    ],
+  },
+  productCategories: {
+    label: 'Категория',
+    hint: 'Можно выбрать несколько',
+    required: true,
+    kind: 'chips',
+    multi: true,
+    options: [
+      { id: 'top', labelRu: 'Верх', promptText: null },
+      { id: 'bottom', labelRu: 'Низ', promptText: null },
+      { id: 'outerwear', labelRu: 'Верхняя одежда', promptText: null },
+      { id: 'dress', labelRu: 'Платья / юбки', promptText: null, needsProductGender: ['women', 'kids', 'unisex'] },
+      { id: 'full_outfit', labelRu: 'Комплект / костюм', promptText: null },
+      { id: 'footwear', labelRu: 'Обувь', promptText: null },
+      { id: 'accessory', labelRu: 'Аксессуар', promptText: null },
+    ],
+  },
+  productSub: {
+    label: 'Тип изделия',
+    required: true,
+    kind: 'grid',
+    dependsOn: 'productCategory',
+    byParent: {
+      top: [
+        { id: 'tshirt', labelRu: 'Футболка', promptText: 't-shirt' },
+        { id: 'polo', labelRu: 'Поло', promptText: 'polo shirt' },
+        { id: 'shirt', labelRu: 'Рубашка', promptText: 'button-up shirt' },
+        { id: 'longsleeve', labelRu: 'Лонгслив', promptText: 'long-sleeve shirt' },
+        { id: 'sweater', labelRu: 'Свитер', promptText: 'sweater' },
+        { id: 'hoodie', labelRu: 'Худи', promptText: 'hoodie' },
+        { id: 'sweatshirt', labelRu: 'Свитшот', promptText: 'sweatshirt' },
+        { id: 'tanktop', labelRu: 'Майка', promptText: 'tank top' },
+      ],
+      bottom: [
+        { id: 'jeans', labelRu: 'Джинсы', promptText: 'jeans' },
+        { id: 'trousers', labelRu: 'Брюки', promptText: 'trousers' },
+        { id: 'shorts', labelRu: 'Шорты', promptText: 'shorts' },
+        { id: 'joggers', labelRu: 'Джоггеры', promptText: 'joggers' },
+        { id: 'skirt', labelRu: 'Юбка', promptText: 'skirt' },
+        { id: 'leggings', labelRu: 'Легинсы', promptText: 'leggings' },
+      ],
+      outerwear: [
+        { id: 'jacket', labelRu: 'Куртка', promptText: 'jacket' },
+        { id: 'coat', labelRu: 'Пальто', promptText: 'coat' },
+        { id: 'parka', labelRu: 'Парка', promptText: 'parka' },
+        { id: 'trench', labelRu: 'Тренч', promptText: 'trench coat' },
+        { id: 'blazer', labelRu: 'Пиджак', promptText: 'blazer' },
+        { id: 'bomber', labelRu: 'Бомбер', promptText: 'bomber jacket' },
+        { id: 'windbreaker', labelRu: 'Ветровка', promptText: 'windbreaker' },
+      ],
+      dress: [
+        { id: 'mini_dress', labelRu: 'Мини-платье', promptText: 'mini dress' },
+        { id: 'midi_dress', labelRu: 'Миди-платье', promptText: 'midi dress' },
+        { id: 'maxi_dress', labelRu: 'Макси-платье', promptText: 'maxi dress' },
+        { id: 'summer_dress', labelRu: 'Летнее платье', promptText: 'summer dress' },
+        { id: 'evening_dress', labelRu: 'Вечернее платье', promptText: 'evening dress' },
+      ],
+      full_outfit: [
+        { id: 'suit', labelRu: 'Деловой костюм', promptText: 'suit', components: 'blazer and trousers' },
+        { id: 'tracksuit', labelRu: 'Спортивный костюм', promptText: 'tracksuit', components: 'hoodie and joggers' },
+        { id: 'cotton_set', labelRu: 'Хлопковый комплект', promptText: 'cotton outfit set', components: 't-shirt and pants' },
+        { id: 'two_piece', labelRu: 'Комплект из двух предметов', promptText: 'two-piece outfit' },
+        { id: 'jumpsuit', labelRu: 'Комбинезон', promptText: 'jumpsuit' },
+      ],
+      footwear: [
+        { id: 'sneakers', labelRu: 'Кроссовки', promptText: 'sneakers' },
+        { id: 'boots', labelRu: 'Ботинки', promptText: 'boots' },
+        { id: 'loafers', labelRu: 'Лоферы', promptText: 'loafers' },
+        { id: 'sandals', labelRu: 'Сандалии', promptText: 'sandals' },
+        { id: 'heels', labelRu: 'Туфли на каблуке', promptText: 'heels' },
+        { id: 'flats', labelRu: 'Балетки', promptText: 'flats' },
+        { id: 'dress_shoes', labelRu: 'Классические туфли', promptText: 'dress shoes' },
+      ],
+      accessory: [
+        { id: 'bag', labelRu: 'Сумка', promptText: 'bag' },
+        { id: 'belt', labelRu: 'Ремень', promptText: 'belt' },
+        { id: 'hat', labelRu: 'Шляпа', promptText: 'hat' },
+        { id: 'scarf', labelRu: 'Шарф', promptText: 'scarf' },
+        { id: 'gloves', labelRu: 'Перчатки', promptText: 'gloves' },
+        { id: 'cap', labelRu: 'Кепка', promptText: 'cap' },
+        { id: 'backpack', labelRu: 'Рюкзак', promptText: 'backpack' },
+      ],
+    },
+  },
+  productColor: {
+    label: 'Цвет',
+    required: true,
+    kind: 'swatches',
+    options: [
+      { id: 'black', labelRu: 'Чёрный', promptText: 'black', swatch: '#1a1a1a' },
+      { id: 'white', labelRu: 'Белый', promptText: 'white', swatch: '#ffffff' },
+      { id: 'off_white', labelRu: 'Молочный', promptText: 'off-white', swatch: '#f2ede2' },
+      { id: 'beige', labelRu: 'Бежевый', promptText: 'beige', swatch: '#d9c7a7' },
+      { id: 'grey', labelRu: 'Серый', promptText: 'grey', swatch: '#9a9a95' },
+      { id: 'navy', labelRu: 'Тёмно-синий', promptText: 'navy', swatch: '#1b2a4a' },
+      { id: 'blue', labelRu: 'Синий', promptText: 'blue', swatch: '#2a5aa8' },
+      { id: 'light_blue', labelRu: 'Голубой', promptText: 'light blue', swatch: '#a8c8e0' },
+      { id: 'green', labelRu: 'Зелёный', promptText: 'green', swatch: '#2f6d3e' },
+      { id: 'olive', labelRu: 'Оливковый', promptText: 'olive', swatch: '#4a5240' },
+      { id: 'khaki', labelRu: 'Хаки', promptText: 'khaki', swatch: '#8c7a4f' },
+      { id: 'brown', labelRu: 'Коричневый', promptText: 'brown', swatch: '#5a3a23' },
+      { id: 'red', labelRu: 'Красный', promptText: 'red', swatch: '#a3272a' },
+      { id: 'burgundy', labelRu: 'Бордовый', promptText: 'burgundy', swatch: '#5a1a22' },
+      { id: 'pink', labelRu: 'Розовый', promptText: 'pink', swatch: '#e0aec0' },
+      { id: 'yellow', labelRu: 'Жёлтый', promptText: 'yellow', swatch: '#e0c060' },
+      { id: 'multicolor', labelRu: 'Мультицвет', promptText: 'multicolor', swatch: 'conic-gradient(from 0deg, #a3272a,#e0c060,#2f6d3e,#2a5aa8,#a3272a)' },
+      { id: 'patterned', labelRu: 'С принтом', promptText: 'patterned', swatch: 'repeating-linear-gradient(45deg,#1a1a1a 0 4px,#f2ede2 4px 8px)' },
+    ],
+  },
+  productMaterial: {
+    label: 'Материал',
+    optional: true,
+    kind: 'grid',
+    options: [
+      { id: 'cotton', labelRu: 'Хлопок', promptText: 'cotton' },
+      { id: 'linen', labelRu: 'Лён', promptText: 'linen' },
+      { id: 'wool', labelRu: 'Шерсть', promptText: 'wool' },
+      { id: 'cashmere', labelRu: 'Кашемир', promptText: 'cashmere' },
+      { id: 'silk', labelRu: 'Шёлк', promptText: 'silk' },
+      { id: 'denim', labelRu: 'Деним', promptText: 'denim' },
+      { id: 'leather', labelRu: 'Кожа', promptText: 'leather' },
+      { id: 'suede', labelRu: 'Замша', promptText: 'suede' },
+      { id: 'knit', labelRu: 'Трикотаж', promptText: 'knit' },
+      { id: 'fleece', labelRu: 'Флис', promptText: 'fleece' },
+      { id: 'nylon', labelRu: 'Нейлон', promptText: 'nylon' },
+      { id: 'polyester', labelRu: 'Полиэстер', promptText: 'polyester' },
+    ],
+  },
+  productDetails: {
+    label: 'Своё уточнение',
+    hint: 'Лучше писать на английском. Попадёт в скобках в конец PRODUCT.',
+    optional: true,
+    kind: 'text',
+    placeholder: 'например: oversized fit',
+  },
+
+  fitNotes: {
+    label: 'Посадка и подача',
+    optional: true,
+    multi: true,
+    kind: 'chips',
+    options: [
+      { id: 'tucked_in', labelRu: 'Верх заправлен', promptText: 'top tucked in' },
+      { id: 'sleeves_rolled', labelRu: 'Рукава закатаны', promptText: 'sleeves rolled up' },
+      { id: 'buttoned_up', labelRu: 'Застёгнуто полностью', promptText: 'fully buttoned' },
+      { id: 'unbuttoned', labelRu: 'Расстёгнуто', promptText: 'unbuttoned casually' },
+      { id: 'open_jacket', labelRu: 'Куртка нараспашку', promptText: 'jacket worn open' },
+      { id: 'layered', labelRu: 'Со слоями', promptText: 'styled with layering' },
+      { id: 'oversized_look', labelRu: 'Оверсайз-посадка', promptText: 'oversized styling' },
+      { id: 'fitted_look', labelRu: 'Облегающая', promptText: 'fitted silhouette' },
+    ],
+  },
+  supportingItems: {
+    label: 'Поддерживающие элементы',
+    hint: 'Ненавязчивые дополнения к образу',
+    optional: true,
+    multi: true,
+    kind: 'chips',
+    options: [
+      { id: 'minimal_sneakers', labelRu: 'Минималистичные кроссовки', promptText: 'minimal white sneakers' },
+      { id: 'leather_boots', labelRu: 'Кожаные ботинки', promptText: 'plain leather boots' },
+      { id: 'dress_shoes', labelRu: 'Классические туфли', promptText: 'simple dress shoes' },
+      { id: 'neutral_bag', labelRu: 'Нейтральная сумка', promptText: 'a minimal unbranded bag' },
+      { id: 'thin_belt', labelRu: 'Тонкий ремень', promptText: 'a thin leather belt' },
+      { id: 'simple_cap', labelRu: 'Простая кепка', promptText: 'a plain cap' },
+      { id: 'scarf', labelRu: 'Шарф', promptText: 'a neutral scarf' },
+    ],
+  },
+  customStyling: {
+    label: 'Кастомная инструкция стайлинга',
+    hint: 'Одна строка на английском',
+    optional: true,
+    kind: 'text',
+    placeholder: 'например: shirt slightly oversized on the shoulders',
+  },
+
+  moodReference: {
+    label: 'Настроение',
+    required: true,
+    kind: 'grid',
+    options: [
+      { id: 'fashion_magazine', labelRu: 'Как в фэшн-журнале', promptText: 'like fashion magazines' },
+      { id: 'minimalist_editorial', labelRu: 'Минималистичная редакция', promptText: 'minimalist editorial' },
+      { id: 'luxury_editorial', labelRu: 'Люкс-редакторская', promptText: 'high-end luxury editorial' },
+      { id: 'streetwear', labelRu: 'Уличная мода', promptText: 'authentic streetwear' },
+      { id: 'urban_casual', labelRu: 'Городская повседневность', promptText: 'urban casual lifestyle' },
+      { id: 'cozy_lifestyle', labelRu: 'Уютный лайфстайл', promptText: 'warm cozy lifestyle' },
+      { id: 'scandinavian', labelRu: 'Скандинавская сдержанность', promptText: 'scandinavian minimalism' },
+      { id: 'mediterranean_summer', labelRu: 'Средиземноморское лето', promptText: 'mediterranean summer vibe' },
+      { id: 'nordic_winter', labelRu: 'Нордическая зима', promptText: 'crisp nordic winter mood' },
+      { id: 'y2k', labelRu: 'Y2K', promptText: 'y2k revival aesthetic' },
+      { id: 'clean_catalog', labelRu: 'Чистый каталог', promptText: 'clean commercial catalog' },
+      { id: 'cinematic', labelRu: 'Кинематографично', promptText: 'cinematic editorial' },
+    ],
+  },
+  locationMode: {
+    label: 'Режим локации',
+    required: true,
+    kind: 'chips',
+    options: [
+      { id: 'auto', labelRu: 'Автовыбор по настроению', promptText: null },
+      { id: 'explicit', labelRu: 'Указать явно', promptText: null },
+    ],
+  },
+  locationType: {
+    label: 'Тип локации',
+    required: true,
+    kind: 'chips',
+    options: [
+      { id: 'studio', labelRu: 'Студия', promptText: null },
+      { id: 'indoor', labelRu: 'В помещении', promptText: null },
+      { id: 'outdoor_urban', labelRu: 'Городская среда', promptText: null },
+      { id: 'outdoor_nature', labelRu: 'Природа', promptText: null },
+    ],
+  },
+  locationSpecific: {
+    label: 'Конкретная локация',
+    required: true,
+    kind: 'grid',
+    dependsOn: 'locationType',
+    byParent: {
+      studio: [
+        { id: 'white_cyclorama', labelRu: 'Белая циклорама', promptText: 'a clean white cyclorama studio' },
+        { id: 'grey_seamless', labelRu: 'Серый seamless', promptText: 'a neutral grey seamless studio' },
+        { id: 'beige_seamless', labelRu: 'Бежевый seamless', promptText: 'a warm beige seamless studio' },
+        { id: 'black_seamless', labelRu: 'Чёрный seamless', promptText: 'a black seamless studio' },
+        { id: 'textured_backdrop', labelRu: 'Бетонная фактура', promptText: 'a textured concrete studio backdrop' },
+      ],
+      indoor: [
+        { id: 'minimalist_apartment', labelRu: 'Светлая квартира', promptText: 'a minimalist light-toned apartment interior' },
+        { id: 'industrial_loft', labelRu: 'Индустриальный лофт', promptText: 'an industrial loft with brick and concrete' },
+        { id: 'cozy_bedroom', labelRu: 'Уютная спальня', promptText: 'a cozy warm-lit bedroom' },
+        { id: 'cafe_interior', labelRu: 'Стильное кафе', promptText: 'a stylish cafe interior' },
+        { id: 'art_gallery', labelRu: 'Галерея', promptText: 'a modern art gallery with white walls' },
+        { id: 'hotel_lobby', labelRu: 'Лобби отеля', promptText: 'a refined hotel lobby' },
+        { id: 'staircase', labelRu: 'Бетонная лестница', promptText: 'a modernist concrete staircase' },
+        { id: 'empty_room', labelRu: 'Пустая комната с окнами', promptText: 'an empty sunlit room with large windows' },
+      ],
+      outdoor_urban: [
+        { id: 'narrow_street', labelRu: 'Узкая европейская улица', promptText: 'a narrow old-European city street' },
+        { id: 'modern_plaza', labelRu: 'Современная площадь', promptText: 'a modern city plaza' },
+        { id: 'brutalist', labelRu: 'Брутализм', promptText: 'brutalist concrete architecture' },
+        { id: 'neon_night', labelRu: 'Неоновая ночная улица', promptText: 'a neon-lit night street' },
+        { id: 'rooftop', labelRu: 'Крыша', promptText: 'a city rooftop with skyline view' },
+        { id: 'bridge', labelRu: 'Пешеходный мост', promptText: 'an urban pedestrian bridge' },
+        { id: 'metro_station', labelRu: 'Метро', promptText: 'a contemporary metro station' },
+      ],
+      outdoor_nature: [
+        { id: 'forest_path', labelRu: 'Тропа в лесу', promptText: 'a quiet forest path' },
+        { id: 'open_field', labelRu: 'Поле', promptText: 'an open grassy field' },
+        { id: 'mountain_vista', labelRu: 'Горы', promptText: 'a mountain vista' },
+        { id: 'sandy_beach', labelRu: 'Песчаный пляж', promptText: 'a sandy beach' },
+        { id: 'rocky_coast', labelRu: 'Скалистый берег', promptText: 'a rocky coastal landscape' },
+        { id: 'wheat_field', labelRu: 'Пшеничное поле', promptText: 'a golden wheat field' },
+        { id: 'lake_shore', labelRu: 'Берег озера', promptText: 'a calm lake shore' },
+        { id: 'flower_garden', labelRu: 'Цветущий сад', promptText: 'a blooming garden' },
+        { id: 'snow_forest', labelRu: 'Заснеженный лес', promptText: 'a snow-covered forest' },
+      ],
+    },
+  },
+  season: {
+    label: 'Время года',
+    required: true,
+    kind: 'chips',
+    options: [
+      { id: 'spring', labelRu: 'Весна', promptText: 'spring' },
+      { id: 'summer', labelRu: 'Лето', promptText: 'summer' },
+      { id: 'autumn', labelRu: 'Осень', promptText: 'autumn' },
+      { id: 'winter', labelRu: 'Зима', promptText: 'winter' },
+    ],
+  },
+  timeOfDay: {
+    label: 'Время суток',
+    required: true,
+    kind: 'chips',
+    options: [
+      { id: 'morning_soft', labelRu: 'Утренний мягкий свет', promptText: 'soft morning light' },
+      { id: 'midday', labelRu: 'Яркий дневной', promptText: 'bright midday light' },
+      { id: 'golden_hour', labelRu: 'Золотой час', promptText: 'golden hour lighting' },
+      { id: 'blue_hour', labelRu: 'Синий час', promptText: 'blue hour twilight' },
+      { id: 'overcast', labelRu: 'Облачно', promptText: 'soft overcast daylight', onlyOutdoor: true },
+      { id: 'night', labelRu: 'Ночь', promptText: 'nighttime with ambient city light', onlyLocationTypes: ['outdoor_urban', 'indoor'] },
+    ],
+  },
+
+  framing: {
+    label: 'Крупность кадра',
+    required: true,
+    kind: 'chips',
+    options: [
+      { id: 'full_body', labelRu: 'Полный рост', promptText: 'full body shot' },
+      { id: 'three_quarter', labelRu: 'По колено', promptText: 'three-quarter length shot' },
+      { id: 'medium', labelRu: 'По пояс', promptText: 'medium shot, waist up' },
+    ],
+  },
+  aspectRatio: {
+    label: 'Соотношение сторон',
+    required: true,
+    kind: 'aspect',
+    options: [
+      { id: 'portrait_3_4', labelRu: '3:4', promptText: '3:4', w: 3, h: 4 },
+      { id: 'portrait_2_3', labelRu: '2:3', promptText: '2:3', w: 2, h: 3 },
+      { id: 'portrait_9_16', labelRu: '9:16', promptText: '9:16', w: 9, h: 16 },
+      { id: 'square', labelRu: '1:1', promptText: '1:1', w: 1, h: 1 },
+    ],
+  },
+};
+
+// Структура секций для левой колонки
+window.SECTIONS = [
+  {
+    id: 'model',
+    title: 'Модель',
+    caption: 'Кто носит одежду',
+    steps: ['gender', 'ageGroup', 'ethnicity', 'bodyType', 'hairLength', 'hairColor', 'facialHair', 'features'],
+  },
+  {
+    id: 'product',
+    title: 'Продукт',
+    caption: 'Что продаём',
+    steps: ['productGender', 'productCategories', 'productDetails'],
+  },
+  {
+    id: 'styling',
+    title: 'Стайлинг',
+    caption: 'Как носят',
+    steps: ['fitNotes', 'supportingItems', 'customStyling'],
+  },
+  {
+    id: 'scene',
+    title: 'Локация и настроение',
+    caption: 'Где и с каким вайбом',
+    steps: ['moodReference', 'locationMode', 'locationType', 'locationSpecific', 'season', 'timeOfDay'],
+  },
+  {
+    id: 'frame',
+    title: 'Кадр',
+    caption: 'Как снято',
+    steps: ['framing', 'aspectRatio'],
+  },
+];
+
+// Обязательные шаги для счётчика прогресса (обязательные при текущем каскаде)
+window.REQUIRED_STEPS_BASE = [
+  'gender', 'ageGroup',
+  'facialHair',
+  'productGender', 'productCategories',
+  'moodReference', 'locationMode',
+  'framing', 'aspectRatio',
+];
+</script>
+<script>// Статический каркас промта. Плейсхолдеры {{SLOT}} заменяются сборщиком.
+
+window.PROMPT_SKELETON = `TASK:
+Create a photorealistic fashion marketplace image using the provided garment reference photos.
+
+INPUT:
+- Images 1–3: photos of the SAME garment/product from different angles.
+- The garment may be shown on a person, mannequin, hanger, or flat lay.
+
+MODEL TYPE:
+- {{MODEL_TYPE}}
+
+PRODUCT:
+- {{PRODUCT}}
+
+GOAL:
+Generate a realistic commercial fashion image where a naturally looking model wears the exact garment from the reference images.
+
+The uploaded photos must be treated as product reference only, NOT as identity reference.
+
+IMPORTANT MODEL INSTRUCTION:
+- Do NOT copy, reconstruct, or preserve the identity, face, body, pose, hairstyle, or proportions of any person visible in the reference images.
+- If the garment is shown on a human in the uploaded photos, use that person only as a clothing carrier reference.
+- Create a new, neutral, realistic fashion model suitable for a marketplace campaign.
+
+GARMENT PRESERVATION RULES:
+The garment is the product being sold and must remain EXACTLY the same as in the reference images.
+
+Do NOT redesign, restyle, simplify, or reinterpret the product in any way.
+
+PRESERVE ALL GARMENT DETAILS EXACTLY:
+- garment type and overall silhouette
+- fit and proportions
+- color and color balance
+- fabric texture and material appearance
+- seams and stitching
+- folds and drape behavior
+- waistband, cuffs, hems, collars, sleeves, pockets
+- buttons, zippers, buckles, drawstrings and other hardware
+- logos, labels, patches, embroidery, graphics and prints
+- trims, piping, edges and finishing details
+
+If some parts are visible only in certain angles, use all uploaded images together to reconstruct the most accurate final product appearance.
+
+{{SCENE_DESCRIPTION_BLOCK}}
+{{LOCATION_BLOCK}}
+EXTRA STYLING RULE:
+The AI may add missing outfit elements only when necessary to create a complete and realistic look.
+
+Any added items must be:
+- minimal
+- neutral
+- unbranded
+- non-distracting
+
+Restrictions:
+- no visible logos
+- no text
+- no branded hardware
+- no monograms
+- no signature patterns
+- no large graphics
+
+All additions must serve only as supportive styling, while the main garment remains fully visible and dominant in the image.
+
+SCENE INTEGRATION:
+The model must look fully native to the scene, not pasted in.
+
+Match and recalculate:
+- lighting direction
+- light softness or hardness
+- exposure
+- color temperature
+- reflections
+- perspective
+- depth of field
+- contact with surfaces and surrounding objects
+
+SHADOWS:
+Generate realistic shadows and grounding:
+- contact shadows under feet/body
+- correct shadow direction
+- natural light interaction with the environment
+- realistic depth and dimensionality
+
+REALISM REQUIREMENT:
+The final result must look like a real professional fashion photograph shot with a real camera.
+
+Requirements:
+- ultra-photorealistic skin
+- realistic fabric and folds
+- natural lighting
+- no CGI look
+- no plastic skin
+- no over-smoothing
+- no fake anatomy
+- no artificial fabric behavior
+
+STYLE:
+- high-end commercial fashion photography
+- marketplace-ready image
+- editorial quality
+- natural proportions
+- real camera optics
+- clean composition
+- premium visual presentation
+- ultra-photorealistic
+- {{FRAMING}}
+- aspect ratio {{ASPECT_RATIO}}
+
+NEGATIVE PROMPT:
+- copying the original model identity
+- same face as reference person
+- preserving the person from the source images
+- altered garment design
+- wrong fit
+- changed length
+- changed color
+- modified fabric
+- missing details
+- simplified seams
+- missing hardware
+- removed logos
+- inaccurate prints
+- unrealistic folds
+- poor draping
+- floating body
+- pasted subject
+- bad perspective
+- incorrect shadows
+- over-smoothed skin
+- CGI
+- 3D render look
+- cartoon style
+- distorted anatomy
+- extra limbs
+- blurry image
+- low resolution
+- artifacts
+
+FINAL PRIORITY:
+1. Preserve the garment exactly as uploaded.
+2. Do not preserve the identity of the original person from the reference photos.
+3. Make the final image look like a real premium marketplace fashion photoshoot.`;
+</script>
+<script>// Сборщик промта и логика каскада.
+
+(function () {
+  const F = window.FILTERS;
+
+  function opt(stepId, id) {
+    if (!id) return null;
+    const step = F[stepId];
+    if (!step || step.byParent) return null;
+    return (step.options || []).find((o) => o.id === id) || null;
+  }
+  function subOpt(catId, subId) {
+    if (!catId || !subId) return null;
+    const step = F.productSub;
+    if (!step || !step.byParent) return null;
+    return (step.byParent[catId] || []).find((o) => o.id === subId) || null;
+  }
+
+  // ---- Видимость шагов ----
+  window.isStepVisible = function (stepId, state) {
+    const isRef = state.gender === 'from_reference';
+    switch (stepId) {
+      // Параметры модели — скрыты при «С референса»
+      case 'ageGroup':
+      case 'ethnicity':
+      case 'bodyType':
+      case 'hairLength':
+      case 'facialHair':
+      case 'features':
+        return !isRef;
+      case 'hairColor':
+        return !isRef && !!state.hairLength && state.hairLength !== 'bald';
+      // Продукт
+      case 'productDetails':
+        return (state.productCategories || []).length > 0;
+      // Локация
+      case 'locationType':
+        return state.locationMode === 'explicit';
+      case 'locationSpecific':
+        return state.locationMode === 'explicit' && !!state.locationType;
+      case 'timeOfDay':
+        return state.locationMode === 'explicit' && !!state.locationType && !!state.locationSpecific;
+      case 'season':
+        return (
+          state.locationMode === 'explicit' &&
+          !!state.locationType &&
+          state.locationType.startsWith('outdoor_') &&
+          !!state.locationSpecific
+        );
+      default:
+        return true;
+    }
+  };
+
+  // ---- Доступные опции ----
+  window.getVisibleOptions = function (stepId, state) {
+    const step = F[stepId];
+    if (!step) return [];
+    let options;
+    if (step.byParent) {
+      const parent = state[step.dependsOn];
+      options = (parent && step.byParent[parent]) || [];
+    } else {
+      options = step.options || [];
+    }
+    return options.filter((o) => {
+      if (o.onlyGender && state.gender !== o.onlyGender) return false;
+      if (o.needsProductGender && !o.needsProductGender.includes(state.productGender)) return false;
+      if (o.onlyOutdoor && !(state.locationType && state.locationType.startsWith('outdoor_'))) return false;
+      if (o.onlyLocationTypes && !o.onlyLocationTypes.includes(state.locationType)) return false;
+      return true;
+    });
+  };
+
+  // ---- Каскадная очистка ----
+  window.cleanupAfterChange = function (state, changedKey) {
+    const cleared = [];
+    const check = (key) => {
+      const curVal = state[key];
+      if (curVal == null || curVal === '' || (Array.isArray(curVal) && !curVal.length)) return;
+      if (!window.isStepVisible(key, state)) {
+        cleared.push(F[key]?.label || key);
+        state[key] = Array.isArray(curVal) ? [] : '';
+        return;
+      }
+      const step = F[key];
+      if (!step) return;
+      const visOpts = window.getVisibleOptions(key, state);
+      if (step.multi) {
+        const allowed = new Set(visOpts.map((o) => o.id));
+        const filtered = curVal.filter((v) => allowed.has(v));
+        if (filtered.length !== curVal.length) { cleared.push(step.label); state[key] = filtered; }
+      } else if (curVal && !visOpts.find((o) => o.id === curVal)) {
+        cleared.push(step.label); state[key] = '';
+      }
+    };
+
+    const dependents = {
+      gender: ['ageGroup', 'ethnicity', 'bodyType', 'hairLength', 'hairColor', 'facialHair', 'features'],
+      hairLength: ['hairColor'],
+      locationMode: ['locationType', 'locationSpecific', 'season', 'timeOfDay'],
+      locationType: ['locationSpecific', 'season', 'timeOfDay'],
+      locationSpecific: ['season', 'timeOfDay'],
+    };
+    (dependents[changedKey] || []).forEach(check);
+    return cleared;
+  };
+
+  // ---- Сборка MODEL_TYPE ----
+  function buildModelType(s) {
+    if (s.gender === 'from_reference') {
+      return 'Use the exact appearance of the model shown in the reference images — including face, age, ethnicity, body type, hair, and all physical characteristics. Treat the reference person as the fashion model for this shoot.';
+    }
+
+    const gender = opt('gender', s.gender);
+    const age = opt('ageGroup', s.ageGroup);
+    const ethn = opt('ethnicity', s.ethnicity);
+    const body = opt('bodyType', s.bodyType);
+    const hairL = opt('hairLength', s.hairLength);
+    const hairC = opt('hairColor', s.hairColor);
+    const facial = opt('facialHair', s.facialHair);
+    const features = (s.features || []).map((id) => opt('features', id)).filter(Boolean);
+
+    if (!gender) return null;
+
+    // e.g. "a young adult (20–29 years old) slavic man"
+    const parts = [];
+    if (age) parts.push(age.promptText);
+    if (ethn) parts.push(ethn.promptText);
+    parts.push(gender.promptText);
+
+    const extras = [];
+    if (body) extras.push(body.promptText);
+
+    if (hairL) {
+      if (hairL.id === 'bald') extras.push('with a shaved head');
+      else if (hairC) extras.push(`with ${hairC.promptText} ${hairL.promptText}`);
+      else extras.push(`with ${hairL.promptText}`);
+    }
+
+    if (facial && facial.id !== 'clean_shaven' && s.gender === 'male') {
+      extras.push(facial.promptText);
+    }
+    if (features.length) extras.push(features.map((f) => f.promptText).join(', '));
+
+    return parts.join(' ') + (extras.length ? ', ' + extras.join(', ') : '');
+  }
+
+  // ---- Сборка PRODUCT (мульти-категория) ----
+  function buildProduct(s) {
+    const pg = opt('productGender', s.productGender);
+    const cats = s.productCategories || [];
+    if (!pg || !cats.length) return null;
+
+    const items = [];
+    for (const catId of cats) {
+      const itemState = (s.productItems || {})[catId] || {};
+      const sub = subOpt(catId, itemState.sub);
+      const color = opt('productColor', itemState.color);
+      const material = opt('productMaterial', itemState.material);
+
+      if (!sub || !color) return null; // обязательные поля ещё не заполнены
+
+      const bits = [color.promptText];
+      if (material) bits.push(material.promptText);
+      bits.push(pg.promptText);
+      bits.push(sub.promptText);
+      let str = bits.join(' ');
+      if (sub.components) str += ` (${sub.components})`;
+      items.push(str);
+    }
+
+    if (!items.length) return null;
+
+    let result;
+    if (items.length === 1) result = items[0];
+    else if (items.length === 2) result = items.join(' and ');
+    else result = items.slice(0, -1).join(', ') + ', and ' + items[items.length - 1];
+
+    if (s.productDetails && s.productDetails.trim()) result += ` (${s.productDetails.trim()})`;
+    return result;
+  }
+
+  // ---- Сборка SCENE_DESCRIPTION_BLOCK ----
+  function buildSceneBlock(s) {
+    const fit = (s.fitNotes || []).map((id) => opt('fitNotes', id)).filter(Boolean);
+    const supp = (s.supportingItems || []).map((id) => opt('supportingItems', id)).filter(Boolean);
+    const custom = (s.customStyling || '').trim();
+    if (!fit.length && !supp.length && !custom) return '';
+    const lines = ['SCENE DESCRIPTION:'];
+    if (fit.length) lines.push('- ' + fit.map((o) => o.promptText).join('; '));
+    if (supp.length) lines.push('- ' + supp.map((o) => o.promptText).join('; '));
+    if (custom) lines.push('- ' + custom);
+    return lines.join('\n') + '\n\n';
+  }
+
+  // ---- Сборка LOCATION_BLOCK ----
+  function buildLocationBlock(s) {
+    const mood = opt('moodReference', s.moodReference);
+    const moodLine = mood ? `Reference mood:\n- ${mood.promptText}` : 'Reference mood:\n- {{MOOD}}';
+
+    if (s.locationMode === 'explicit') {
+      const locStep = F.locationSpecific;
+      let locSpec = null;
+      if (s.locationType && s.locationSpecific && locStep && locStep.byParent) {
+        locSpec = (locStep.byParent[s.locationType] || []).find((o) => o.id === s.locationSpecific);
+      }
+      const time = opt('timeOfDay', s.timeOfDay);
+      const season = opt('season', s.season);
+
+      const lines = ['LOCATION:'];
+      lines.push('- ' + (locSpec ? locSpec.promptText : '{{LOCATION}}'));
+      lines.push('- ' + (time ? time.promptText : '{{TIME_OF_DAY}}'));
+      if (s.locationType && s.locationType.startsWith('outdoor_')) {
+        lines.push('- ' + (season ? season.promptText + ' season' : '{{SEASON}} season'));
+      }
+      return lines.join('\n') + '\n\n' + moodLine + '\n\n';
+    }
+
+    const autoBlock = `LOCATION SELECTION RULE:
+Choose the location automatically based on:
+- the style
+- mood
+- season
+- purpose
+- visual character of the garment
+
+The location must feel:
+- natural
+- stylish
+- commercially attractive
+- logically connected to the clothing`;
+    return autoBlock + '\n\n' + moodLine + '\n\n';
+  }
+
+  // ---- Полный промт ----
+  window.buildPrompt = function (state) {
+    const model = buildModelType(state) || '{{MODEL_TYPE}}';
+    const product = buildProduct(state) || '{{PRODUCT}}';
+    const sceneBlock = buildSceneBlock(state);
+    const locationBlock = buildLocationBlock(state);
+    const framing = opt('framing', state.framing);
+    const ar = opt('aspectRatio', state.aspectRatio);
+
+    return window.PROMPT_SKELETON
+      .replace('{{MODEL_TYPE}}', model)
+      .replace('{{PRODUCT}}', product)
+      .replace('{{SCENE_DESCRIPTION_BLOCK}}\n', sceneBlock)
+      .replace('{{LOCATION_BLOCK}}\n', locationBlock)
+      .replace('{{FRAMING}}', framing ? framing.promptText : '{{FRAMING}}')
+      .replace('{{ASPECT_RATIO}}', ar ? ar.promptText : '{{ASPECT_RATIO}}');
+  };
+
+  // ---- Динамические части для подсветки ----
+  window.getDynamicParts = function (state) {
+    return {
+      MODEL_TYPE: buildModelType(state),
+      PRODUCT: buildProduct(state),
+      FRAMING: opt('framing', state.framing)?.promptText || null,
+      ASPECT_RATIO: opt('aspectRatio', state.aspectRatio)?.promptText || null,
+      MOOD: opt('moodReference', state.moodReference)?.promptText || null,
+    };
+  };
+
+  // ---- Счётчик обязательных ----
+  window.countRequired = function (state) {
+    const required = [];
+    window.REQUIRED_STEPS_BASE.forEach((id) => {
+      if (window.isStepVisible(id, state)) required.push(id);
+    });
+    if (state.locationMode === 'explicit') {
+      required.push('locationType', 'locationSpecific', 'timeOfDay');
+      if (state.locationType && state.locationType.startsWith('outdoor_')) required.push('season');
+    }
+    // Для каждой выбранной категории продукта — sub + color обязательны
+    (state.productCategories || []).forEach((catId) => {
+      required.push('pSub_' + catId, 'pColor_' + catId);
+    });
+
+    const total = required.length;
+    let filled = 0;
+    required.forEach((id) => {
+      if (id.startsWith('pSub_') || id.startsWith('pColor_')) {
+        const [prefix, catId] = id.split(/_(.+)/);
+        const item = (state.productItems || {})[catId] || {};
+        if (prefix === 'pSub' ? item.sub : item.color) filled++;
+      } else {
+        const v = state[id];
+        if (Array.isArray(v) ? v.length > 0 : !!v) filled++;
+      }
+    });
+    return { filled, total };
+  };
+})();
+</script>
+<script type="text/babel" data-presets="react">// UI компоненты для шагов
+
+const { useState, useEffect, useRef, useMemo, useCallback } = React;
+
+// ---------- Step header ----------
+function StepHead({ step, value, onClear }) {
+  const filled = Array.isArray(value) ? value.length > 0 : !!value;
+  return (
+    <div className="step-head">
+      <span className="step-label">{step.label}</span>
+      {step.hint && <span className="step-hint">{step.hint}</span>}
+      {step.optional ? (
+        <span className="step-tag">не обязательно</span>
+      ) : null}
+      {filled && !step.optional && (
+        <button className="step-clear" onClick={onClear} title="Сбросить">сбросить</button>
+      )}
+      {filled && step.optional && (
+        <button className="step-clear" onClick={onClear} title="Очистить">очистить</button>
+      )}
+    </div>
+  );
+}
+
+// ---------- Chips ----------
+function Chips({ options, value, multi, onChange }) {
+  const active = (id) => multi ? (value || []).includes(id) : value === id;
+  const toggle = (id) => {
+    if (multi) {
+      const next = (value || []).includes(id)
+        ? value.filter((v) => v !== id)
+        : [...(value || []), id];
+      onChange(next);
+    } else {
+      onChange(value === id ? '' : id);
+    }
+  };
+  return (
+    <div className="chips">
+      {options.map((o) => (
+        <button
+          key={o.id}
+          className={`chip ${active(o.id) ? 'is-active' : ''}`}
+          onClick={() => toggle(o.id)}
+        >
+          {o.labelRu}
+          {o.sub && <span className="chip-sub">{o.sub}</span>}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ---------- Grid tiles ----------
+function GridTiles({ options, value, multi, onChange, compact }) {
+  const active = (id) => multi ? (value || []).includes(id) : value === id;
+  const toggle = (id) => {
+    if (multi) {
+      const next = (value || []).includes(id)
+        ? value.filter((v) => v !== id)
+        : [...(value || []), id];
+      onChange(next);
+    } else {
+      onChange(value === id ? '' : id);
+    }
+  };
+  return (
+    <div className={`grid ${compact ? 'compact' : ''}`}>
+      {options.map((o) => (
+        <button
+          key={o.id}
+          className={`tile ${active(o.id) ? 'is-active' : ''}`}
+          onClick={() => toggle(o.id)}
+        >
+          {o.swatch && (
+            <span
+              className="tile-swatch"
+              style={{ background: o.swatch.includes('gradient') ? o.swatch : o.swatch }}
+            />
+          )}
+          <span>{o.labelRu}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ---------- Swatches (colors) ----------
+function Swatches({ options, value, onChange }) {
+  return (
+    <div className="swatches">
+      {options.map((o) => {
+        const isActive = value === o.id;
+        return (
+          <button
+            key={o.id}
+            className={`swatch ${isActive ? 'is-active' : ''}`}
+            onClick={() => onChange(isActive ? '' : o.id)}
+            title={o.labelRu}
+          >
+            <span
+              className="swatch-dot"
+              style={{ background: o.swatch }}
+            />
+            <span className="swatch-label">{o.labelRu}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ---------- Aspect ratios ----------
+function AspectPicker({ options, value, onChange }) {
+  const maxDim = 48;
+  return (
+    <div className="aspect-row">
+      {options.map((o) => {
+        const scale = maxDim / Math.max(o.w, o.h);
+        return (
+          <button
+            key={o.id}
+            className={`aspect ${value === o.id ? 'is-active' : ''}`}
+            onClick={() => onChange(value === o.id ? '' : o.id)}
+          >
+            <span
+              className="aspect-box"
+              style={{
+                width: Math.max(12, o.w * scale),
+                height: Math.max(12, o.h * scale),
+              }}
+            />
+            <span className="aspect-label">{o.labelRu}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// ---------- Text input ----------
+function TextField({ value, onChange, placeholder, multiline }) {
+  if (multiline) {
+    return (
+      <textarea
+        className="text-input"
+        rows="2"
+        placeholder={placeholder}
+        value={value || ''}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    );
+  }
+  return (
+    <input
+      className="text-input"
+      type="text"
+      placeholder={placeholder}
+      value={value || ''}
+      onChange={(e) => onChange(e.target.value)}
+    />
+  );
+}
+
+// ---------- StepCard dispatcher ----------
+function StepCard({ stepId, step, value, options, onChange, onClear, flash }) {
+  const isDisabledAll = step.kind !== 'text' && (!options || options.length === 0);
+
+  let control = null;
+  if (step.kind === 'chips') {
+    control = <Chips options={options} value={value} multi={step.multi} onChange={onChange} />;
+  } else if (step.kind === 'grid') {
+    control = <GridTiles options={options} value={value} multi={step.multi} onChange={onChange} />;
+  } else if (step.kind === 'swatches') {
+    control = <Swatches options={options} value={value} onChange={onChange} />;
+  } else if (step.kind === 'aspect') {
+    control = <AspectPicker options={options} value={value} onChange={onChange} />;
+  } else if (step.kind === 'text') {
+    control = <TextField value={value} onChange={onChange} placeholder={step.placeholder} multiline={stepId === 'productDetails'} />;
+  }
+
+  const filled = Array.isArray(value) ? value.length > 0 : !!value;
+
+  return (
+    <div className={`step ${filled ? 'is-filled' : ''} ${flash ? 'is-flash' : ''}`}>
+      <StepHead step={step} value={value} onClear={onClear} />
+      {control}
+    </div>
+  );
+}
+
+window.StepCard = StepCard;
+</script>
+<script type="text/babel" data-presets="react">// Правая колонка: превью + действия + пресеты
+
+const { useState: useStateP, useEffect: useEffectP, useRef: useRefP, useMemo: useMemoP } = React;
+
+// Конструирует подсвеченный JSX из собранного промта.
+// Берёт исходный текст и оборачивает динамические вставки в <span class="preview-dyn">.
+function renderHighlightedPrompt(text, parts, state) {
+  // собираем список "подсветок": { find, className }
+  const highlights = [];
+  const push = (find, cls) => {
+    if (find) highlights.push({ find, cls });
+  };
+
+  if (parts.MODEL_TYPE) push(parts.MODEL_TYPE, 'preview-dyn');
+  if (parts.PRODUCT) push(parts.PRODUCT, 'preview-dyn');
+  if (parts.FRAMING) push(parts.FRAMING, 'preview-dyn');
+  if (parts.ASPECT_RATIO) push(`aspect ratio ${parts.ASPECT_RATIO}`, 'preview-dyn');
+  if (parts.MOOD) push(parts.MOOD, 'preview-dyn');
+
+  // placeholders {{..}}
+  const placeholders = text.match(/\{\{[A-Z_]+\}\}/g) || [];
+  placeholders.forEach((p) => push(p, 'preview-placeholder'));
+
+  // Секционные заголовки — бросаем стиль на SANS caps
+  const sectionTitles = [
+    'TASK:', 'INPUT:', 'MODEL TYPE:', 'PRODUCT:', 'GOAL:',
+    'IMPORTANT MODEL INSTRUCTION:', 'GARMENT PRESERVATION RULES:',
+    'PRESERVE ALL GARMENT DETAILS EXACTLY:',
+    'SCENE DESCRIPTION:', 'LOCATION:', 'LOCATION SELECTION RULE:',
+    'Reference mood:',
+    'EXTRA STYLING RULE:', 'Restrictions:', 'Any added items must be:',
+    'SCENE INTEGRATION:', 'Match and recalculate:',
+    'SHADOWS:', 'REALISM REQUIREMENT:', 'Requirements:',
+    'STYLE:', 'NEGATIVE PROMPT:', 'FINAL PRIORITY:',
+    'The location must feel:',
+  ];
+
+  // Наивный токенайзер: разбиваем по секционным заголовкам и динамическим токенам
+  const allTokens = [...highlights.map((h) => h.find), ...sectionTitles];
+  const unique = Array.from(new Set(allTokens)).filter(Boolean);
+  // сортируем по убыванию длины чтобы длинные совпадения шли первыми
+  unique.sort((a, b) => b.length - a.length);
+
+  if (!unique.length) return text;
+
+  const pattern = unique.map((s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+  const regex = new RegExp(`(${pattern})`, 'g');
+  const parts2 = text.split(regex);
+
+  return parts2.map((chunk, i) => {
+    if (sectionTitles.includes(chunk)) {
+      return React.createElement('span', { key: i, className: 'preview-section-title' }, chunk);
+    }
+    if (chunk.startsWith('{{')) {
+      return React.createElement('span', { key: i, className: 'preview-placeholder' }, chunk);
+    }
+    const found = highlights.find((h) => h.find === chunk);
+    if (found) {
+      return React.createElement('span', { key: i, className: found.cls }, chunk);
+    }
+    return chunk;
+  });
+}
+
+// ------- StaticCollapse: схлопывает большой "каркас" -------
+function splitCore(text) {
+  // Находим кусок от "IMPORTANT MODEL INSTRUCTION:" до перед "SCENE DESCRIPTION" или "LOCATION"
+  // Это наша статика-сердцевина (preservation, realism и тд)
+  const start = text.indexOf('IMPORTANT MODEL INSTRUCTION:');
+  const preEnd = text.indexOf('SCENE DESCRIPTION:');
+  const locStart = text.indexOf('LOCATION:');
+  const locRule = text.indexOf('LOCATION SELECTION RULE:');
+  const sceneIntegration = text.indexOf('EXTRA STYLING RULE:');
+
+  if (start < 0 || sceneIntegration < 0) return { pre: text, staticBlock: '', post: '' };
+
+  // end of "GARMENT PRESERVATION RULES" section — before SCENE or LOCATION
+  let midStart = preEnd;
+  if (midStart < 0) midStart = locStart;
+  if (midStart < 0) midStart = locRule;
+
+  // "каркас 1" = от IMPORTANT до midStart
+  // "каркас 2" = от EXTRA STYLING RULE до NEGATIVE PROMPT end
+  // Упростим: просто схлопываем всё между GARMENT PRESERVATION RULES end и STYLE end.
+
+  const headEnd = preEnd > 0 ? preEnd : (locStart > 0 ? locStart : locRule);
+  const stylesStart = text.indexOf('STYLE:');
+  const negStart = text.indexOf('NEGATIVE PROMPT:');
+  const finalStart = text.indexOf('FINAL PRIORITY:');
+
+  // Статический блок #1: от IMPORTANT до headEnd (preservation + instructions)
+  const core1 = text.slice(start, headEnd);
+  const pre = text.slice(0, start);
+  const dynamic = text.slice(headEnd, sceneIntegration);
+  const core2 = text.slice(sceneIntegration, stylesStart);
+  const styleBlock = text.slice(stylesStart, negStart);
+  const negBlock = text.slice(negStart, finalStart);
+  const finalBlock = text.slice(finalStart);
+
+  return { pre, core1, dynamic, core2, styleBlock, negBlock, finalBlock };
+}
+
+function PromptPreview({ promptText, parts, state, showStatic, onToggleStatic }) {
+  const split = useMemoP(() => splitCore(promptText), [promptText]);
+
+  const renderWithHl = (t) => renderHighlightedPrompt(t, parts, state);
+
+  if (!split.core1) {
+    // fallback — не удалось распарсить
+    return <div className="preview-body">{renderWithHl(promptText)}</div>;
+  }
+
+  return (
+    <div className="preview-body">
+      {renderWithHl(split.pre)}
+      {showStatic ? renderWithHl(split.core1) : (
+        <button
+          className="preview-static-toggle"
+          onClick={onToggleStatic}
+        >
+          <svg className="chev" width="10" height="10" viewBox="0 0 10 10"><path d="M3 2 L7 5 L3 8" fill="none" stroke="currentColor" strokeWidth="1.5" /></svg>
+          Технический каркас (сохранение, анти-копирование) — 23 строки
+        </button>
+      )}
+      {renderWithHl(split.dynamic)}
+      {showStatic ? renderWithHl(split.core2) : (
+        <button
+          className="preview-static-toggle is-open"
+          onClick={onToggleStatic}
+        >
+          <svg className="chev" width="10" height="10" viewBox="0 0 10 10"><path d="M3 2 L7 5 L3 8" fill="none" stroke="currentColor" strokeWidth="1.5" /></svg>
+          Статические правила (реализм, тени, освещение) — 36 строк
+        </button>
+      )}
+      {renderWithHl(split.styleBlock)}
+      {showStatic ? renderWithHl(split.negBlock) : (
+        <button
+          className="preview-static-toggle"
+          onClick={onToggleStatic}
+        >
+          <svg className="chev" width="10" height="10" viewBox="0 0 10 10"><path d="M3 2 L7 5 L3 8" fill="none" stroke="currentColor" strokeWidth="1.5" /></svg>
+          Negative prompt — 27 строк
+        </button>
+      )}
+      {renderWithHl(split.finalBlock)}
+    </div>
+  );
+}
+
+window.PromptPreview = PromptPreview;
+
+// ---------- Presets Sheet ----------
+function PresetsSheet({ open, presets, onClose, onSave, onLoad, onDelete, onExport, onImport, currentState }) {
+  const [name, setName] = useStateP('');
+  const fileRef = useRefP(null);
+
+  if (!open) return null;
+
+  const handleSave = () => {
+    const n = name.trim();
+    if (!n) return;
+    onSave(n);
+    setName('');
+  };
+
+  const formatDate = (ts) => {
+    const d = new Date(ts);
+    return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  };
+
+  const presetSummary = (preset) => {
+    const s = preset.state;
+    const bits = [];
+    const mood = s.moodReference && window.FILTERS.moodReference.options.find(o => o.id === s.moodReference);
+    if (mood) bits.push(mood.labelRu);
+    const cat = s.productCategory && window.FILTERS.productCategory.options.find(o => o.id === s.productCategory);
+    if (cat) bits.push(cat.labelRu);
+    return bits.join(' · ') || '—';
+  };
+
+  return React.createElement(React.Fragment, null,
+    <div className="sheet-backdrop" onClick={onClose} />,
+    <div className="sheet">
+      <div className="sheet-head">
+        <h3>Пресеты</h3>
+        <span style={{fontSize:11.5, color:'var(--muted)'}}>{presets.length} сохранено</span>
+        <button className="sheet-close" onClick={onClose} aria-label="Закрыть">
+          <svg width="14" height="14" viewBox="0 0 14 14"><path d="M3 3 L11 11 M11 3 L3 11" stroke="currentColor" strokeWidth="1.5" fill="none" /></svg>
+        </button>
+      </div>
+      <div className="sheet-body">
+        <div className="preset-form">
+          <input
+            className="text-input"
+            placeholder="Название пресета"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSave()}
+          />
+          <button className="btn btn-primary" onClick={handleSave} disabled={!name.trim()}>
+            Сохранить текущий
+          </button>
+        </div>
+
+        {presets.length === 0 ? (
+          <div className="empty-presets">
+            Сохранённых пресетов нет. Введите имя и сохраните текущую комбинацию.
+          </div>
+        ) : (
+          <div className="preset-list">
+            {presets.map((p) => (
+              <div key={p.id} className="preset-item">
+                <div>
+                  <div className="preset-name">{p.name}</div>
+                  <div className="preset-meta">{presetSummary(p)} · {formatDate(p.updatedAt)}</div>
+                </div>
+                <div className="preset-actions">
+                  <button onClick={() => onLoad(p.id)}>загрузить</button>
+                  <button className="del" onClick={() => onDelete(p.id)}>удалить</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="sheet-foot">
+        <button className="btn btn-outline" onClick={onExport} disabled={presets.length === 0}>
+          Экспорт JSON
+        </button>
+        <button className="btn btn-outline" onClick={() => fileRef.current?.click()}>
+          Импорт JSON
+        </button>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="application/json"
+          style={{display: 'none'}}
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) onImport(f);
+            e.target.value = '';
+          }}
+        />
+        <div style={{flex: 1}} />
+        <button className="btn btn-ghost" onClick={onClose}>Закрыть</button>
+      </div>
+    </div>
+  );
+}
+
+window.PresetsSheet = PresetsSheet;
+</script>
+<script type="text/babel" data-presets="react">// Главный компонент приложения
+
+const { useState: uS, useEffect: uE, useMemo: uM, useCallback: uCB, useRef: uR } = React;
+
+const STORAGE_KEY = 'prompt-builder-state-v2';
+const PRESETS_KEY = 'prompt-builder-presets-v1';
+
+const DEFAULT_STATE = {
+  gender: '', ageGroup: '', ethnicity: '', bodyType: '',
+  hairLength: '', hairColor: '', facialHair: '', features: [],
+  productGender: '',
+  productCategories: [],
+  productItems: {},    // { [catId]: { sub, color, material } }
+  productDetails: '',
+  fitNotes: [], supportingItems: [], customStyling: '',
+  moodReference: '', locationMode: 'auto',
+  locationType: '', locationSpecific: '', season: '', timeOfDay: '',
+  framing: 'full_body', aspectRatio: 'portrait_3_4',
+};
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return { ...DEFAULT_STATE };
+    return { ...DEFAULT_STATE, ...JSON.parse(raw) };
+  } catch { return { ...DEFAULT_STATE }; }
+}
+function loadPresets() {
+  try {
+    const raw = localStorage.getItem(PRESETS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
+// ---------- Icons ----------
+const Icon = {
+  copy: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>,
+  check: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 12l6 6L20 6"/></svg>,
+  reset: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>,
+  book: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M4 5a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2z"/><path d="M4 19a2 2 0 0 0 2 2h12"/></svg>,
+};
+
+// ---------- Header ----------
+function Header({ progress, onOpenPresets, onResetAll }) {
+  return (
+    <header className="app-header">
+      <div className="brand">
+        <span className="brand-mark" />
+        <span>Prompt Builder</span>
+        <span className="brand-slash">/</span>
+        <span className="brand-sub">fashion marketplace</span>
+      </div>
+      <div className="header-progress">
+        <div className="progress-track">
+          <div className="progress-fill" style={{ width: `${progress.total ? (progress.filled / progress.total) * 100 : 0}%` }} />
+        </div>
+        <div className="progress-text">{progress.filled}/{progress.total} обязательных</div>
+      </div>
+      <div className="header-actions">
+        <button className="hbtn" onClick={onOpenPresets}>{Icon.book} Пресеты</button>
+        <button className="hbtn" onClick={onResetAll}>{Icon.reset} Сбросить всё</button>
+      </div>
+    </header>
+  );
+}
+
+// ---------- Outline ----------
+function Outline({ sections, state, activeSection }) {
+  const counts = sections.map((sec) => {
+    let filled = 0, total = 0;
+    sec.steps.forEach((id) => {
+      if (!window.isStepVisible(id, state)) return;
+      const step = window.FILTERS[id];
+      if (!step || step.optional) return;
+      total++;
+      const v = state[id];
+      if (Array.isArray(v) ? v.length : v) filled++;
+    });
+    // product section: count per-category items
+    if (sec.id === 'product') {
+      (state.productCategories || []).forEach((catId) => {
+        total += 2; // sub + color
+        const item = (state.productItems || {})[catId] || {};
+        if (item.sub) filled++;
+        if (item.color) filled++;
+      });
+    }
+    return { id: sec.id, filled, total };
+  });
+  return (
+    <aside className="outline-col">
+      <nav className="outline" aria-label="Секции">
+        {sections.map((sec, i) => {
+          const c = counts.find((x) => x.id === sec.id);
+          const isActive = activeSection === sec.id;
+          return (
+            <a key={sec.id} href={`#sec-${sec.id}`} className={isActive ? 'is-active' : ''}>
+              <span>{String(i + 1).padStart(2, '0')} {sec.title}</span>
+              <span className="outline-count">{c.filled}/{c.total}</span>
+            </a>
+          );
+        })}
+      </nav>
+    </aside>
+  );
+}
+
+// ---------- ColResizer ----------
+function ColResizer({ onResize }) {
+  const [dragging, setDragging] = uS(false);
+  uE(() => {
+    if (!dragging) return;
+    const onMove = (e) => {
+      const w = Math.min(Math.max(window.innerWidth - e.clientX, 360), Math.min(900, window.innerWidth - 520));
+      document.documentElement.style.setProperty('--right-col', w + 'px');
+      onResize && onResize(w);
+    };
+    const onUp = () => { setDragging(false); document.body.classList.remove('is-col-dragging'); };
+    document.body.classList.add('is-col-dragging');
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+    return () => { window.removeEventListener('mousemove', onMove); window.removeEventListener('mouseup', onUp); };
+  }, [dragging, onResize]);
+  return (
+    <div
+      className={`col-resizer ${dragging ? 'is-dragging' : ''}`}
+      onMouseDown={(e) => { e.preventDefault(); setDragging(true); }}
+      title="Перетащите, чтобы изменить ширину превью"
+    />
+  );
+}
+
+// ---------- Product Section ----------
+function ProductSection({ state, setValue, setRaw, flash }) {
+  const F = window.FILTERS;
+  const cats = state.productCategories || [];
+
+  // category labels map
+  const catLabel = (catId) => (F.productCategories?.options || F.productCategory?.options || []).find((o) => o.id === catId)?.labelRu || catId;
+
+  const handleCategoryChange = (newCats) => {
+    setRaw((prev) => {
+      const removed = (prev.productCategories || []).filter((id) => !newCats.includes(id));
+      const newItems = { ...prev.productItems };
+      removed.forEach((id) => delete newItems[id]);
+      return { ...prev, productCategories: newCats, productItems: newItems };
+    });
+  };
+
+  const setItemField = (catId, field, val) => {
+    setRaw((prev) => ({
+      ...prev,
+      productItems: {
+        ...prev.productItems,
+        [catId]: { ...(prev.productItems?.[catId] || {}), [field]: val },
+      },
+    }));
+  };
+
+  const catOptions = window.getVisibleOptions('productCategories', state);
+  const colorOptions = window.getVisibleOptions('productColor', state);
+  const materialOptions = window.getVisibleOptions('productMaterial', state);
+
+  return (
+    <>
+      {/* Кому товар */}
+      <StepCard
+        stepId="productGender"
+        step={F.productGender}
+        value={state.productGender}
+        options={window.getVisibleOptions('productGender', state)}
+        onChange={(v) => setValue('productGender', v)}
+        onClear={() => setValue('productGender', '')}
+        flash={flash === 'productGender'}
+      />
+
+      {/* Категория (мульти) */}
+      <StepCard
+        stepId="productCategories"
+        step={F.productCategories}
+        value={state.productCategories}
+        options={catOptions}
+        onChange={handleCategoryChange}
+        onClear={() => setRaw((prev) => ({ ...prev, productCategories: [], productItems: {} }))}
+        flash={flash === 'productCategories'}
+      />
+
+      {/* Подсекции по каждой выбранной категории */}
+      {cats.map((catId) => {
+        const item = state.productItems?.[catId] || {};
+        const subOptions = (F.productSub?.byParent?.[catId]) || [];
+        const label = catLabel(catId);
+
+        return (
+          <div key={catId} className="product-group">
+            <div className="product-group-head">{label}</div>
+
+            <StepCard
+              stepId={`pSub_${catId}`}
+              step={{ label: `Тип изделия`, kind: 'grid', required: true }}
+              value={item.sub || ''}
+              options={subOptions}
+              onChange={(v) => setItemField(catId, 'sub', v)}
+              onClear={() => setItemField(catId, 'sub', '')}
+              flash={false}
+            />
+
+            <StepCard
+              stepId={`pColor_${catId}`}
+              step={{ label: `Цвет`, kind: 'swatches', required: true }}
+              value={item.color || ''}
+              options={colorOptions}
+              onChange={(v) => setItemField(catId, 'color', v)}
+              onClear={() => setItemField(catId, 'color', '')}
+              flash={false}
+            />
+
+            <StepCard
+              stepId={`pMaterial_${catId}`}
+              step={{ label: `Материал`, kind: 'grid', optional: true }}
+              value={item.material || ''}
+              options={materialOptions}
+              onChange={(v) => setItemField(catId, 'material', v)}
+              onClear={() => setItemField(catId, 'material', '')}
+              flash={false}
+            />
+          </div>
+        );
+      })}
+
+      {/* Своё уточнение */}
+      {cats.length > 0 && (
+        <StepCard
+          stepId="productDetails"
+          step={F.productDetails}
+          value={state.productDetails}
+          options={[]}
+          onChange={(v) => setValue('productDetails', v)}
+          onClear={() => setValue('productDetails', '')}
+          flash={flash === 'productDetails'}
+        />
+      )}
+    </>
+  );
+}
+
+// ---------- ResetConfirm ----------
+function ResetConfirm({ onConfirm, onCancel }) {
+  return (
+    <div className="sheet-backdrop" onClick={onCancel}>
+      <div className="sheet" style={{ width: 400 }} onClick={(e) => e.stopPropagation()}>
+        <div className="sheet-head"><h3>Сбросить всё?</h3></div>
+        <div className="sheet-body" style={{ color: 'var(--muted)', fontSize: 13.5 }}>
+          Все текущие выборы будут очищены. Сохранённые пресеты останутся на месте.
+        </div>
+        <div className="sheet-foot">
+          <div style={{ flex: 1 }} />
+          <button className="btn btn-ghost" onClick={onCancel}>Отмена</button>
+          <button className="btn btn-primary" style={{ flex: '0 0 auto', background: 'var(--danger)' }} onClick={onConfirm}>Сбросить</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---------- App ----------
+function App() {
+  uE(() => {
+    const saved = localStorage.getItem('prompt-builder-right-col');
+    if (saved) document.documentElement.style.setProperty('--right-col', saved + 'px');
+  }, []);
+  const handleResize = uCB((w) => { localStorage.setItem('prompt-builder-right-col', String(Math.round(w))); }, []);
+
+  const [state, setState] = uS(loadState);
+  const [toasts, setToasts] = uS([]);
+  const [flashed, setFlashed] = uS(null);
+  const [copied, setCopied] = uS(false);
+  const [previewMode, setPreviewMode] = uS('pretty');
+  const [manualText, setManualText] = uS('');
+  const [showStatic, setShowStatic] = uS(false);
+  const [activeSection, setActiveSection] = uS('model');
+  const [presetsOpen, setPresetsOpen] = uS(false);
+  const [resetConfirm, setResetConfirm] = uS(false);
+  const [presets, setPresets] = uS(loadPresets);
+  const toastId = uR(0);
+
+  uE(() => { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }, [state]);
+  uE(() => { localStorage.setItem(PRESETS_KEY, JSON.stringify(presets)); }, [presets]);
+
+  const pushToast = uCB((msg, opts = {}) => {
+    const id = ++toastId.current;
+    setToasts((t) => [...t, { id, msg, ...opts }]);
+    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 3200);
+  }, []);
+
+  // Стандартный setValue — с каскадной очисткой
+  const setValue = uCB((stepId, newVal) => {
+    setState((prev) => {
+      const next = { ...prev, [stepId]: newVal };
+      const cleared = window.cleanupAfterChange(next, stepId);
+      if (cleared.length) pushToast(`Обновлены связанные поля: ${cleared.join(', ')}`, { warn: true });
+      return next;
+    });
+    setFlashed(stepId);
+    setTimeout(() => setFlashed((f) => (f === stepId ? null : f)), 220);
+  }, [pushToast]);
+
+  // Прямой доступ к setState для продуктовой секции
+  const setRaw = uCB((updater) => { setState(updater); }, []);
+
+  const clearStep = uCB((stepId) => {
+    const step = window.FILTERS[stepId];
+    setValue(stepId, step?.multi ? [] : '');
+  }, [setValue]);
+
+  const progress = uM(() => window.countRequired(state), [state]);
+  const prompt = uM(() => window.buildPrompt(state), [state]);
+  const parts = uM(() => window.getDynamicParts(state), [state]);
+  const finalText = previewMode === 'edit' ? manualText : prompt;
+
+  uE(() => {
+    if (previewMode === 'edit') setManualText(prompt);
+  }, [previewMode]);
+
+  const copyPrompt = uCB(async () => {
+    try { await navigator.clipboard.writeText(finalText); }
+    catch {
+      const ta = document.createElement('textarea');
+      ta.value = finalText; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+    pushToast('Промт скопирован в буфер обмена');
+  }, [finalText, pushToast]);
+
+  const savePreset = uCB((name) => {
+    const id = 'p_' + Date.now().toString(36);
+    setPresets((list) => [{ id, name, state, updatedAt: Date.now() }, ...list]);
+    pushToast(`Пресет «${name}» сохранён`);
+  }, [state, pushToast]);
+
+  const loadPreset = uCB((id) => {
+    const p = presets.find((x) => x.id === id);
+    if (!p) return;
+    setState({ ...DEFAULT_STATE, ...p.state });
+    setPresetsOpen(false);
+    pushToast(`Загружен пресет «${p.name}»`);
+  }, [presets, pushToast]);
+
+  const deletePreset = uCB((id) => {
+    const p = presets.find((x) => x.id === id);
+    setPresets((list) => list.filter((x) => x.id !== id));
+    if (p) pushToast(`Пресет «${p.name}» удалён`);
+  }, [presets, pushToast]);
+
+  const exportPresets = uCB(() => {
+    const blob = new Blob([JSON.stringify({ version: 1, presets }, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `prompt-presets-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click(); URL.revokeObjectURL(url);
+    pushToast(`Экспортировано пресетов: ${presets.length}`);
+  }, [presets, pushToast]);
+
+  const importPresets = uCB((file) => {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        const list = Array.isArray(data) ? data : data.presets;
+        if (!Array.isArray(list)) throw new Error('invalid');
+        const normalized = list
+          .filter((p) => p && p.state && p.name)
+          .map((p) => ({ id: p.id || 'p_' + Math.random().toString(36).slice(2, 9), name: p.name, state: p.state, updatedAt: p.updatedAt || Date.now() }));
+        setPresets((cur) => [...normalized, ...cur]);
+        pushToast(`Импортировано пресетов: ${normalized.length}`);
+      } catch { pushToast('Не удалось прочитать файл пресетов', { warn: true }); }
+    };
+    reader.readAsText(file);
+  }, [pushToast]);
+
+  const resetAll = uCB(() => {
+    setState({ ...DEFAULT_STATE });
+    setManualText(''); setPreviewMode('pretty'); setResetConfirm(false);
+    pushToast('Все поля сброшены');
+  }, [pushToast]);
+
+  uE(() => {
+    const handler = () => {
+      for (const sec of window.SECTIONS) {
+        const el = document.getElementById(`sec-${sec.id}`);
+        if (!el) continue;
+        const r = el.getBoundingClientRect();
+        if (r.top < 140 && r.bottom > 140) { setActiveSection(sec.id); break; }
+      }
+    };
+    window.addEventListener('scroll', handler, { passive: true });
+    handler();
+    return () => window.removeEventListener('scroll', handler);
+  }, []);
+
+  return React.createElement(React.Fragment, null,
+    <Header progress={progress} onOpenPresets={() => setPresetsOpen(true)} onResetAll={() => setResetConfirm(true)} />,
+
+    <div className="app-body">
+      <Outline sections={window.SECTIONS} state={state} activeSection={activeSection} />
+
+      <main className="left-col">
+        <div className="hero">
+          <div className="hero-eyebrow">PROMPT BUILDER · fashion marketplace cards</div>
+          <h1>Конструктор промтов для генерации карточек одежды</h1>
+          <p className="hero-lead">Выбирайте параметры на русском — готовый английский промт собирается справа в реальном времени. Динамические вставки подсвечены оливковым.</p>
+        </div>
+
+        {window.SECTIONS.map((sec, i) => (
+          <section key={sec.id} id={`sec-${sec.id}`} className="section" data-screen-label={`0${i + 1} ${sec.title}`}>
+            <div className="section-head">
+              <span className="section-num">{String(i + 1).padStart(2, '0')}</span>
+              <h2 className="section-title">{sec.title}</h2>
+              <span className="section-caption">{sec.caption}</span>
+            </div>
+
+            {/* Секция ПРОДУКТ рендерится отдельно */}
+            {sec.id === 'product' ? (
+              <ProductSection
+                state={state}
+                setValue={setValue}
+                setRaw={setRaw}
+                flash={flashed}
+              />
+            ) : (
+              sec.steps.map((stepId) => {
+                if (!window.isStepVisible(stepId, state)) return null;
+                const step = window.FILTERS[stepId];
+                if (!step) return null;
+                const options = step.kind === 'text' ? [] : window.getVisibleOptions(stepId, state);
+                return (
+                  <StepCard
+                    key={stepId}
+                    stepId={stepId}
+                    step={step}
+                    value={state[stepId]}
+                    options={options}
+                    onChange={(v) => setValue(stepId, v)}
+                    onClear={() => clearStep(stepId)}
+                    flash={flashed === stepId}
+                  />
+                );
+              })
+            )}
+          </section>
+        ))}
+
+        <div style={{ color: 'var(--muted)', fontSize: 12.5, marginTop: 40, padding: '20px 0', borderTop: '1px solid var(--border)' }}>
+          Всё готово. Нажмите «Скопировать промт» справа и вставьте в Wavespeed / Nano Banana 2 / GPT-Image-2 вместе с референсными фото одежды.
+        </div>
+      </main>
+
+      <ColResizer onResize={handleResize} />
+
+      <aside className="right-col">
+        <div className="preview-head">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div className="preview-tabs">
+              <button className={`preview-tab ${previewMode === 'pretty' ? 'is-active' : ''}`} onClick={() => setPreviewMode('pretty')}>Превью</button>
+              <button className={`preview-tab ${previewMode === 'edit' ? 'is-active' : ''}`} onClick={() => { setManualText(prompt); setPreviewMode('edit'); }}>Ручное редактирование</button>
+            </div>
+            <div style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--muted-2)', fontFamily: 'var(--font-mono)', letterSpacing: '0.04em' }}>
+              {finalText.length.toLocaleString('ru-RU')} СИМВ
+            </div>
+          </div>
+          <div className="preview-meta">
+            <span className="preview-meta-dot" />
+            <span>Заполнено <span className="num">{progress.filled}</span> из <span className="num">{progress.total}</span> обязательных шагов</span>
+          </div>
+        </div>
+
+        {previewMode === 'pretty' ? (
+          <PromptPreview
+            promptText={prompt}
+            parts={parts}
+            state={state}
+            showStatic={showStatic}
+            onToggleStatic={() => setShowStatic((v) => !v)}
+          />
+        ) : (
+          <textarea
+            className="preview-textarea"
+            value={manualText}
+            onChange={(e) => setManualText(e.target.value)}
+            spellCheck={false}
+          />
+        )}
+
+        <div className="preview-actions">
+          <button className={`btn btn-primary ${copied ? 'is-copied' : ''}`} onClick={copyPrompt}>
+            {copied ? Icon.check : Icon.copy}
+            {copied ? 'Скопировано' : 'Скопировать промт'}
+          </button>
+          {previewMode === 'edit' && (
+            <button className="btn btn-outline" onClick={() => { setManualText(prompt); pushToast('Правки отменены'); }}>
+              Сбросить правки
+            </button>
+          )}
+        </div>
+      </aside>
+    </div>,
+
+    <div className="toast-stack">
+      {toasts.map((t) => <div key={t.id} className={`toast ${t.warn ? 'warn' : ''}`}>{t.msg}</div>)}
+    </div>,
+
+    <PresetsSheet
+      open={presetsOpen}
+      presets={presets}
+      onClose={() => setPresetsOpen(false)}
+      onSave={savePreset}
+      onLoad={loadPreset}
+      onDelete={deletePreset}
+      onExport={exportPresets}
+      onImport={importPresets}
+      currentState={state}
+    />,
+
+    resetConfirm && <ResetConfirm onConfirm={resetAll} onCancel={() => setResetConfirm(false)} />
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>
