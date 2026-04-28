@@ -4,8 +4,7 @@ window.PROMPT_SKELETON = `TASK:
 Create a photorealistic fashion marketplace image using the provided garment reference photos.
 
 INPUT:
-- Images 1–3: photos of the SAME garment/product from different angles.
-- The garment may be shown on a person, mannequin, hanger, or flat lay.
+{{INPUT_BLOCK}}
 
 MODEL TYPE:
 - {{MODEL_TYPE}}

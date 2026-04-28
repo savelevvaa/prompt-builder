@@ -7,7 +7,7 @@ const PRESETS_KEY = 'prompt-builder-presets-v1';
 
 const DEFAULT_STATE = {
   gender: '', ageGroup: '', ethnicity: '', bodyType: '',
-  hairLength: '', hairColor: '', facialHair: '', features: [],
+  hairLength: '', hairColor: '', facialHair: '', features: [], featuresOverride: '',
   productGender: '',
   productCategories: [],
   productItems: {},    // { [catId]: { sub, color, material } }
@@ -38,10 +38,29 @@ const Icon = {
   check: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 12l6 6L20 6"/></svg>,
   reset: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>,
   book: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M4 5a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2z"/><path d="M4 19a2 2 0 0 0 2 2h12"/></svg>,
+  arrowUpRight: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg>,
 };
+
+const GEN_MODELS = [
+  { name: 'Nano Banana 2', url: 'https://wavespeed.ai/models/google/nano-banana-2/edit' },
+  { name: 'GPT-Image 2', url: 'https://wavespeed.ai/models/openai/gpt-image-2/edit' },
+  { name: 'Seedream v5.0 Lite', url: 'https://wavespeed.ai/models/bytedance/seedream-v5.0-lite' },
+  { name: 'Qwen-Image v2.0 Pro', url: 'https://wavespeed.ai/models/wavespeed-ai/qwen-image-2.0-pro/edit' },
+  { name: 'Wan v2.7', url: 'https://wavespeed.ai/models/alibaba/wan-2.7/image-edit-pro' },
+];
 
 // ---------- Header ----------
 function Header({ progress, onOpenPresets, onResetAll }) {
+  const [genOpen, setGenOpen] = uS(false);
+  const genRef = uR(null);
+
+  uE(() => {
+    if (!genOpen) return;
+    const handler = (e) => { if (genRef.current && !genRef.current.contains(e.target)) setGenOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [genOpen]);
+
   return (
     <header className="app-header">
       <div className="brand">
@@ -57,8 +76,24 @@ function Header({ progress, onOpenPresets, onResetAll }) {
         <div className="progress-text">{progress.filled}/{progress.total} обязательных</div>
       </div>
       <div className="header-actions">
-        <button className="hbtn" onClick={onOpenPresets}>{Icon.book} Пресеты</button>
         <button className="hbtn" onClick={onResetAll}>{Icon.reset} Сбросить всё</button>
+        <button className="hbtn" onClick={onOpenPresets}>{Icon.book} Пресеты</button>
+        <div className="gen-wrap" ref={genRef}>
+          <button className="hbtn hbtn-accent" onClick={() => setGenOpen(v => !v)}>
+            {Icon.arrowUpRight} Перейти к генерации
+          </button>
+          {genOpen && (
+            <div className="gen-dropdown">
+              <div className="gen-dropdown-head">Выберите модель</div>
+              {GEN_MODELS.map(m => (
+                <a key={m.url} href={m.url} target="_blank" rel="noopener noreferrer" className="gen-item" onClick={() => setGenOpen(false)}>
+                  <span>{m.name}</span>
+                  {Icon.arrowUpRight}
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );
@@ -297,6 +332,13 @@ function App() {
   const setValue = uCB((stepId, newVal) => {
     setState((prev) => {
       const next = { ...prev, [stepId]: newVal };
+      // При изменении features — авто-заполняем featuresOverride собранным текстом
+      if (stepId === 'features' && Array.isArray(newVal)) {
+        const texts = newVal
+          .map((id) => (window.FILTERS.features.options.find((o) => o.id === id)?.promptText || ''))
+          .filter(Boolean);
+        next.featuresOverride = texts.join(', ');
+      }
       const cleared = window.cleanupAfterChange(next, stepId);
       if (cleared.length) pushToast(`Обновлены связанные поля: ${cleared.join(', ')}`, { warn: true });
       return next;
@@ -307,6 +349,31 @@ function App() {
 
   // Прямой доступ к setState для продуктовой секции
   const setRaw = uCB((updater) => { setState(updater); }, []);
+
+  const isSectionFilled = (sec) => {
+    if (sec.id === 'product') {
+      return !!state.productGender || (state.productCategories || []).length > 0 || !!state.productDetails;
+    }
+    return sec.steps.some((stepId) => {
+      const v = state[stepId];
+      const def = DEFAULT_STATE[stepId];
+      if (Array.isArray(v)) return v.length > 0;
+      if (def === undefined || def === '') return !!v;
+      return v !== def;
+    });
+  };
+
+  const resetSection = uCB((sec) => {
+    setState((prev) => {
+      const next = { ...prev };
+      sec.steps.forEach((stepId) => {
+        const def = DEFAULT_STATE[stepId];
+        next[stepId] = def !== undefined ? def : (window.FILTERS[stepId]?.multi ? [] : '');
+      });
+      if (sec.id === 'product') next.productItems = {};
+      return next;
+    });
+  }, []);
 
   const clearStep = uCB((stepId) => {
     const step = window.FILTERS[stepId];
@@ -418,6 +485,9 @@ function App() {
             <div className="section-head">
               <span className="section-num">{String(i + 1).padStart(2, '0')}</span>
               <h2 className="section-title">{sec.title}</h2>
+              {isSectionFilled(sec) && (
+                <button className="section-reset-btn" onClick={() => resetSection(sec)}>Сбросить раздел</button>
+              )}
               <span className="section-caption">{sec.caption}</span>
             </div>
 

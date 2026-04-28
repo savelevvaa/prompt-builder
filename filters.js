@@ -3,7 +3,6 @@
 window.FILTERS = {
   gender: {
     label: 'Пол модели',
-    hint: 'Базовый параметр — от него зависят опции ниже',
     required: true,
     kind: 'chips',
     options: [
@@ -87,7 +86,7 @@ window.FILTERS = {
   },
   facialHair: {
     label: 'Борода и усы',
-    required: true,
+    optional: true,
     kind: 'chips',
     options: [
       { id: 'clean_shaven', labelRu: 'Гладко выбрит', promptText: 'clean-shaven' },
@@ -99,18 +98,34 @@ window.FILTERS = {
     ],
   },
   features: {
-    label: 'Особенности',
+    label: 'Особенности внешности',
     hint: 'Можно выбрать несколько',
     optional: true,
     multi: true,
     kind: 'chips',
     options: [
-      { id: 'visible_tattoo', labelRu: 'Видимые татуировки', promptText: 'visible tattoos' },
+      { id: 'visible_tattoo', labelRu: 'Татуировки', promptText: 'visible tattoos' },
+      { id: 'freckles', labelRu: 'Веснушки', promptText: 'freckles' },
+      { id: 'moles', labelRu: 'Родинки', promptText: 'moles' },
       { id: 'glasses_optical', labelRu: 'Очки', promptText: 'glasses' },
       { id: 'glasses_sun', labelRu: 'Солнцезащитные очки', promptText: 'sunglasses' },
-      { id: 'freckles', labelRu: 'Веснушки', promptText: 'freckles' },
       { id: 'earrings', labelRu: 'Серьги', promptText: 'earrings' },
+      { id: 'chain', labelRu: 'Цепочка / ожерелье', promptText: 'a chain necklace' },
+      { id: 'rings', labelRu: 'Кольца', promptText: 'rings' },
+      { id: 'bracelets', labelRu: 'Браслеты', promptText: 'bracelets' },
+      { id: 'watch', labelRu: 'Наручные часы', promptText: 'a wristwatch' },
+      { id: 'nose_piercing', labelRu: 'Пирсинг в носу', promptText: 'a nose piercing' },
+      { id: 'bold_makeup', labelRu: 'Яркий макияж', promptText: 'bold makeup' },
+      { id: 'natural_makeup', labelRu: 'Лёгкий макияж', promptText: 'natural makeup' },
+      { id: 'long_nails', labelRu: 'Длинные ногти', promptText: 'long nails' },
     ],
+  },
+  featuresOverride: {
+    label: 'Уточнение',
+    hint: 'Можно внести правки',
+    optional: true,
+    kind: 'text',
+    placeholder: 'например: visible tattoos, gold chain necklace',
   },
 
   productGender: {
@@ -253,7 +268,7 @@ window.FILTERS = {
   },
   productDetails: {
     label: 'Своё уточнение',
-    hint: 'Лучше писать на английском. Попадёт в скобках в конец PRODUCT.',
+    hint: 'Попадёт в скобках в конец PRODUCT',
     optional: true,
     kind: 'text',
     placeholder: 'например: oversized fit',
@@ -304,14 +319,14 @@ window.FILTERS = {
     required: true,
     kind: 'grid',
     options: [
-      { id: 'fashion_magazine', labelRu: 'Как в фэшн-журнале', promptText: 'like fashion magazines' },
-      { id: 'minimalist_editorial', labelRu: 'Минималистичная редакция', promptText: 'minimalist editorial' },
-      { id: 'luxury_editorial', labelRu: 'Люкс-редакторская', promptText: 'high-end luxury editorial' },
+      { id: 'fashion_magazine', labelRu: 'Фэшн-журнал', promptText: 'fashion magazine editorial' },
+      { id: 'minimalist_editorial', labelRu: 'Минимализм', promptText: 'clean minimalist aesthetic' },
+      { id: 'luxury_editorial', labelRu: 'Люкс', promptText: 'high-end luxury style' },
       { id: 'streetwear', labelRu: 'Уличная мода', promptText: 'authentic streetwear' },
-      { id: 'urban_casual', labelRu: 'Городская повседневность', promptText: 'urban casual lifestyle' },
-      { id: 'cozy_lifestyle', labelRu: 'Уютный лайфстайл', promptText: 'warm cozy lifestyle' },
-      { id: 'scandinavian', labelRu: 'Скандинавская сдержанность', promptText: 'scandinavian minimalism' },
-      { id: 'mediterranean_summer', labelRu: 'Средиземноморское лето', promptText: 'mediterranean summer vibe' },
+      { id: 'urban_casual', labelRu: 'Городская жизнь', promptText: 'urban casual lifestyle' },
+      { id: 'cozy_lifestyle', labelRu: 'Уют', promptText: 'warm cozy lifestyle' },
+      { id: 'scandinavian', labelRu: 'Скандинавский', promptText: 'scandinavian minimalism' },
+      { id: 'mediterranean_summer', labelRu: 'Средиземноморье', promptText: 'mediterranean summer vibe' },
       { id: 'nordic_winter', labelRu: 'Нордическая зима', promptText: 'crisp nordic winter mood' },
       { id: 'y2k', labelRu: 'Y2K', promptText: 'y2k revival aesthetic' },
       { id: 'clean_catalog', labelRu: 'Чистый каталог', promptText: 'clean commercial catalog' },
@@ -319,7 +334,7 @@ window.FILTERS = {
     ],
   },
   locationMode: {
-    label: 'Режим локации',
+    label: 'Локация',
     required: true,
     kind: 'chips',
     options: [
@@ -437,7 +452,7 @@ window.SECTIONS = [
     id: 'model',
     title: 'Модель',
     caption: 'Кто носит одежду',
-    steps: ['gender', 'ageGroup', 'ethnicity', 'bodyType', 'hairLength', 'hairColor', 'facialHair', 'features'],
+    steps: ['gender', 'ageGroup', 'ethnicity', 'bodyType', 'hairLength', 'hairColor', 'facialHair', 'features', 'featuresOverride'],
   },
   {
     id: 'product',
@@ -468,7 +483,6 @@ window.SECTIONS = [
 // Обязательные шаги для счётчика прогресса (обязательные при текущем каскаде)
 window.REQUIRED_STEPS_BASE = [
   'gender', 'ageGroup',
-  'facialHair',
   'productGender', 'productCategories',
   'moodReference', 'locationMode',
   'framing', 'aspectRatio',

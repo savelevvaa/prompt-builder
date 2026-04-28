@@ -111,6 +111,42 @@ input, textarea { font-family: inherit; color: inherit; }
 }
 .hbtn:hover { color: var(--ink); background: rgba(0,0,0,0.03); }
 .hbtn svg { width: 14px; height: 14px; }
+.hbtn-accent {
+  background: var(--accent); color: #fff !important;
+  padding: 7px 14px; font-weight: 500;
+}
+.hbtn-accent:hover { background: var(--accent-hover) !important; color: #fff !important; }
+.gen-wrap { position: relative; }
+.gen-dropdown {
+  position: absolute; top: calc(100% + 8px); right: 0;
+  width: 230px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-pop);
+  z-index: 300;
+  overflow: hidden;
+  animation: fadeSlideIn var(--dur) var(--ease);
+}
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.gen-dropdown-head {
+  padding: 10px 14px 7px;
+  font-size: 10px; color: var(--muted-2);
+  letter-spacing: 0.1em; text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+}
+.gen-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; color: var(--ink); text-decoration: none;
+  font-size: 13px; transition: background 120ms;
+  border-bottom: 1px solid var(--border);
+}
+.gen-item:last-child { border-bottom: none; }
+.gen-item:hover { background: var(--bg-panel); }
+.gen-item svg { width: 12px; height: 12px; flex-shrink: 0; color: var(--muted-2); }
 
 /* ---------- LAYOUT ---------- */
 .app-body {
@@ -224,6 +260,22 @@ body.is-col-dragging * { user-select: none !important; }
 .section-caption {
   color: var(--muted); font-size: 13px; margin-left: auto;
 }
+.section-reset-btn {
+  border: 1px solid var(--border-strong);
+  border-radius: 20px;
+  padding: 3px 11px;
+  font-size: 12px;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+  letter-spacing: 0.01em;
+  transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.section-reset-btn:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+  background: rgba(138,58,42,0.05);
+}
 
 /* ---------- STEP CARD ---------- */
 .step {
@@ -256,7 +308,6 @@ body.is-col-dragging * { user-select: none !important; }
   color: var(--muted); font-size: 12.5px;
 }
 .step-tag {
-  margin-left: auto;
   font-size: 11px;
   color: var(--muted);
   border: 1px solid var(--border);
@@ -767,7 +818,6 @@ body.is-col-dragging * { user-select: none !important; }
 window.FILTERS = {
   gender: {
     label: 'Пол модели',
-    hint: 'Базовый параметр — от него зависят опции ниже',
     required: true,
     kind: 'chips',
     options: [
@@ -851,7 +901,7 @@ window.FILTERS = {
   },
   facialHair: {
     label: 'Борода и усы',
-    required: true,
+    optional: true,
     kind: 'chips',
     options: [
       { id: 'clean_shaven', labelRu: 'Гладко выбрит', promptText: 'clean-shaven' },
@@ -863,18 +913,34 @@ window.FILTERS = {
     ],
   },
   features: {
-    label: 'Особенности',
+    label: 'Особенности внешности',
     hint: 'Можно выбрать несколько',
     optional: true,
     multi: true,
     kind: 'chips',
     options: [
-      { id: 'visible_tattoo', labelRu: 'Видимые татуировки', promptText: 'visible tattoos' },
+      { id: 'visible_tattoo', labelRu: 'Татуировки', promptText: 'visible tattoos' },
+      { id: 'freckles', labelRu: 'Веснушки', promptText: 'freckles' },
+      { id: 'moles', labelRu: 'Родинки', promptText: 'moles' },
       { id: 'glasses_optical', labelRu: 'Очки', promptText: 'glasses' },
       { id: 'glasses_sun', labelRu: 'Солнцезащитные очки', promptText: 'sunglasses' },
-      { id: 'freckles', labelRu: 'Веснушки', promptText: 'freckles' },
       { id: 'earrings', labelRu: 'Серьги', promptText: 'earrings' },
+      { id: 'chain', labelRu: 'Цепочка / ожерелье', promptText: 'a chain necklace' },
+      { id: 'rings', labelRu: 'Кольца', promptText: 'rings' },
+      { id: 'bracelets', labelRu: 'Браслеты', promptText: 'bracelets' },
+      { id: 'watch', labelRu: 'Наручные часы', promptText: 'a wristwatch' },
+      { id: 'nose_piercing', labelRu: 'Пирсинг в носу', promptText: 'a nose piercing' },
+      { id: 'bold_makeup', labelRu: 'Яркий макияж', promptText: 'bold makeup' },
+      { id: 'natural_makeup', labelRu: 'Лёгкий макияж', promptText: 'natural makeup' },
+      { id: 'long_nails', labelRu: 'Длинные ногти', promptText: 'long nails' },
     ],
+  },
+  featuresOverride: {
+    label: 'Уточнение',
+    hint: 'Можно внести правки',
+    optional: true,
+    kind: 'text',
+    placeholder: 'например: visible tattoos, gold chain necklace',
   },
 
   productGender: {
@@ -1017,7 +1083,7 @@ window.FILTERS = {
   },
   productDetails: {
     label: 'Своё уточнение',
-    hint: 'Лучше писать на английском. Попадёт в скобках в конец PRODUCT.',
+    hint: 'Попадёт в скобках в конец PRODUCT',
     optional: true,
     kind: 'text',
     placeholder: 'например: oversized fit',
@@ -1068,14 +1134,14 @@ window.FILTERS = {
     required: true,
     kind: 'grid',
     options: [
-      { id: 'fashion_magazine', labelRu: 'Как в фэшн-журнале', promptText: 'like fashion magazines' },
-      { id: 'minimalist_editorial', labelRu: 'Минималистичная редакция', promptText: 'minimalist editorial' },
-      { id: 'luxury_editorial', labelRu: 'Люкс-редакторская', promptText: 'high-end luxury editorial' },
+      { id: 'fashion_magazine', labelRu: 'Фэшн-журнал', promptText: 'fashion magazine editorial' },
+      { id: 'minimalist_editorial', labelRu: 'Минимализм', promptText: 'clean minimalist aesthetic' },
+      { id: 'luxury_editorial', labelRu: 'Люкс', promptText: 'high-end luxury style' },
       { id: 'streetwear', labelRu: 'Уличная мода', promptText: 'authentic streetwear' },
-      { id: 'urban_casual', labelRu: 'Городская повседневность', promptText: 'urban casual lifestyle' },
-      { id: 'cozy_lifestyle', labelRu: 'Уютный лайфстайл', promptText: 'warm cozy lifestyle' },
-      { id: 'scandinavian', labelRu: 'Скандинавская сдержанность', promptText: 'scandinavian minimalism' },
-      { id: 'mediterranean_summer', labelRu: 'Средиземноморское лето', promptText: 'mediterranean summer vibe' },
+      { id: 'urban_casual', labelRu: 'Городская жизнь', promptText: 'urban casual lifestyle' },
+      { id: 'cozy_lifestyle', labelRu: 'Уют', promptText: 'warm cozy lifestyle' },
+      { id: 'scandinavian', labelRu: 'Скандинавский', promptText: 'scandinavian minimalism' },
+      { id: 'mediterranean_summer', labelRu: 'Средиземноморье', promptText: 'mediterranean summer vibe' },
       { id: 'nordic_winter', labelRu: 'Нордическая зима', promptText: 'crisp nordic winter mood' },
       { id: 'y2k', labelRu: 'Y2K', promptText: 'y2k revival aesthetic' },
       { id: 'clean_catalog', labelRu: 'Чистый каталог', promptText: 'clean commercial catalog' },
@@ -1083,7 +1149,7 @@ window.FILTERS = {
     ],
   },
   locationMode: {
-    label: 'Режим локации',
+    label: 'Локация',
     required: true,
     kind: 'chips',
     options: [
@@ -1201,7 +1267,7 @@ window.SECTIONS = [
     id: 'model',
     title: 'Модель',
     caption: 'Кто носит одежду',
-    steps: ['gender', 'ageGroup', 'ethnicity', 'bodyType', 'hairLength', 'hairColor', 'facialHair', 'features'],
+    steps: ['gender', 'ageGroup', 'ethnicity', 'bodyType', 'hairLength', 'hairColor', 'facialHair', 'features', 'featuresOverride'],
   },
   {
     id: 'product',
@@ -1232,7 +1298,6 @@ window.SECTIONS = [
 // Обязательные шаги для счётчика прогресса (обязательные при текущем каскаде)
 window.REQUIRED_STEPS_BASE = [
   'gender', 'ageGroup',
-  'facialHair',
   'productGender', 'productCategories',
   'moodReference', 'locationMode',
   'framing', 'aspectRatio',
@@ -1244,8 +1309,7 @@ window.PROMPT_SKELETON = `TASK:
 Create a photorealistic fashion marketplace image using the provided garment reference photos.
 
 INPUT:
-- Images 1–3: photos of the SAME garment/product from different angles.
-- The garment may be shown on a person, mannequin, hanger, or flat lay.
+{{INPUT_BLOCK}}
 
 MODEL TYPE:
 - {{MODEL_TYPE}}
@@ -1410,11 +1474,14 @@ FINAL PRIORITY:
       case 'ethnicity':
       case 'bodyType':
       case 'hairLength':
-      case 'facialHair':
       case 'features':
         return !isRef;
       case 'hairColor':
         return !isRef && !!state.hairLength && state.hairLength !== 'bald';
+      case 'facialHair':
+        return state.gender === 'male';
+      case 'featuresOverride':
+        return !isRef && (state.features || []).length > 0;
       // Продукт
       case 'productDetails':
         return (state.productCategories || []).length > 0;
@@ -1475,14 +1542,15 @@ FINAL PRIORITY:
         const allowed = new Set(visOpts.map((o) => o.id));
         const filtered = curVal.filter((v) => allowed.has(v));
         if (filtered.length !== curVal.length) { cleared.push(step.label); state[key] = filtered; }
-      } else if (curVal && !visOpts.find((o) => o.id === curVal)) {
+      } else if (step.kind !== 'text' && curVal && !visOpts.find((o) => o.id === curVal)) {
         cleared.push(step.label); state[key] = '';
       }
     };
 
     const dependents = {
-      gender: ['ageGroup', 'ethnicity', 'bodyType', 'hairLength', 'hairColor', 'facialHair', 'features'],
+      gender: ['ageGroup', 'ethnicity', 'bodyType', 'hairLength', 'hairColor', 'facialHair', 'features', 'featuresOverride'],
       hairLength: ['hairColor'],
+      features: ['featuresOverride'],
       locationMode: ['locationType', 'locationSpecific', 'season', 'timeOfDay'],
       locationType: ['locationSpecific', 'season', 'timeOfDay'],
       locationSpecific: ['season', 'timeOfDay'],
@@ -1490,6 +1558,14 @@ FINAL PRIORITY:
     (dependents[changedKey] || []).forEach(check);
     return cleared;
   };
+
+  // ---- Сборка INPUT_BLOCK ----
+  function buildInputBlock(s) {
+    if (s.gender === 'from_reference') {
+      return `- Images 1–2: reference photos of the fashion model whose appearance should be used.\n- Images 3–5: photos of the SAME garment/product from different angles.\n- The garment may be shown on a person, mannequin, hanger, or flat lay.`;
+    }
+    return `- Images 1–3: photos of the SAME garment/product from different angles.\n- The garment may be shown on a person, mannequin, hanger, or flat lay.`;
+  }
 
   // ---- Сборка MODEL_TYPE ----
   function buildModelType(s) {
@@ -1526,7 +1602,10 @@ FINAL PRIORITY:
     if (facial && facial.id !== 'clean_shaven' && s.gender === 'male') {
       extras.push(facial.promptText);
     }
-    if (features.length) extras.push(features.map((f) => f.promptText).join(', '));
+    if (features.length) {
+      const override = (s.featuresOverride || '').trim();
+      extras.push(override || features.map((f) => f.promptText).join(', '));
+    }
 
     return parts.join(' ') + (extras.length ? ', ' + extras.join(', ') : '');
   }
@@ -1628,6 +1707,7 @@ The location must feel:
     const ar = opt('aspectRatio', state.aspectRatio);
 
     return window.PROMPT_SKELETON
+      .replace('{{INPUT_BLOCK}}', buildInputBlock(state))
       .replace('{{MODEL_TYPE}}', model)
       .replace('{{PRODUCT}}', product)
       .replace('{{SCENE_DESCRIPTION_BLOCK}}\n', sceneBlock)
@@ -1689,14 +1769,12 @@ function StepHead({ step, value, onClear }) {
     <div className="step-head">
       <span className="step-label">{step.label}</span>
       {step.hint && <span className="step-hint">{step.hint}</span>}
-      {step.optional ? (
-        <span className="step-tag">не обязательно</span>
-      ) : null}
-      {filled && !step.optional && (
-        <button className="step-clear" onClick={onClear} title="Сбросить">сбросить</button>
+      <span style={{flex: 1}} />
+      {filled && (
+        <button className="step-clear" onClick={onClear}>сбросить</button>
       )}
-      {filled && step.optional && (
-        <button className="step-clear" onClick={onClear} title="Очистить">очистить</button>
+      {step.optional && (
+        <span className="step-tag">не обязательно</span>
       )}
     </div>
   );
@@ -2132,7 +2210,7 @@ const PRESETS_KEY = 'prompt-builder-presets-v1';
 
 const DEFAULT_STATE = {
   gender: '', ageGroup: '', ethnicity: '', bodyType: '',
-  hairLength: '', hairColor: '', facialHair: '', features: [],
+  hairLength: '', hairColor: '', facialHair: '', features: [], featuresOverride: '',
   productGender: '',
   productCategories: [],
   productItems: {},    // { [catId]: { sub, color, material } }
@@ -2163,10 +2241,29 @@ const Icon = {
   check: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 12l6 6L20 6"/></svg>,
   reset: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>,
   book: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M4 5a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2z"/><path d="M4 19a2 2 0 0 0 2 2h12"/></svg>,
+  arrowUpRight: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg>,
 };
+
+const GEN_MODELS = [
+  { name: 'Nano Banana 2', url: 'https://wavespeed.ai/models/google/nano-banana-2/edit' },
+  { name: 'GPT-Image 2', url: 'https://wavespeed.ai/models/openai/gpt-image-2/edit' },
+  { name: 'Seedream v5.0 Lite', url: 'https://wavespeed.ai/models/bytedance/seedream-v5.0-lite' },
+  { name: 'Qwen-Image v2.0 Pro', url: 'https://wavespeed.ai/models/wavespeed-ai/qwen-image-2.0-pro/edit' },
+  { name: 'Wan v2.7', url: 'https://wavespeed.ai/models/alibaba/wan-2.7/image-edit-pro' },
+];
 
 // ---------- Header ----------
 function Header({ progress, onOpenPresets, onResetAll }) {
+  const [genOpen, setGenOpen] = React.useState(false);
+  const genRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (!genOpen) return;
+    const handler = (e) => { if (genRef.current && !genRef.current.contains(e.target)) setGenOpen(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [genOpen]);
+
   return (
     <header className="app-header">
       <div className="brand">
@@ -2182,8 +2279,24 @@ function Header({ progress, onOpenPresets, onResetAll }) {
         <div className="progress-text">{progress.filled}/{progress.total} обязательных</div>
       </div>
       <div className="header-actions">
-        <button className="hbtn" onClick={onOpenPresets}>{Icon.book} Пресеты</button>
         <button className="hbtn" onClick={onResetAll}>{Icon.reset} Сбросить всё</button>
+        <button className="hbtn" onClick={onOpenPresets}>{Icon.book} Пресеты</button>
+        <div className="gen-wrap" ref={genRef}>
+          <button className="hbtn hbtn-accent" onClick={() => setGenOpen(v => !v)}>
+            {Icon.arrowUpRight} Перейти к генерации
+          </button>
+          {genOpen && (
+            <div className="gen-dropdown">
+              <div className="gen-dropdown-head">Выберите модель</div>
+              {GEN_MODELS.map(m => (
+                <a key={m.url} href={m.url} target="_blank" rel="noopener noreferrer" className="gen-item" onClick={() => setGenOpen(false)}>
+                  <span>{m.name}</span>
+                  {Icon.arrowUpRight}
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );
@@ -2422,6 +2535,13 @@ function App() {
   const setValue = uCB((stepId, newVal) => {
     setState((prev) => {
       const next = { ...prev, [stepId]: newVal };
+      // При изменении features — авто-заполняем featuresOverride собранным текстом
+      if (stepId === 'features' && Array.isArray(newVal)) {
+        const texts = newVal
+          .map((id) => (window.FILTERS.features.options.find((o) => o.id === id)?.promptText || ''))
+          .filter(Boolean);
+        next.featuresOverride = texts.join(', ');
+      }
       const cleared = window.cleanupAfterChange(next, stepId);
       if (cleared.length) pushToast(`Обновлены связанные поля: ${cleared.join(', ')}`, { warn: true });
       return next;
@@ -2432,6 +2552,33 @@ function App() {
 
   // Прямой доступ к setState для продуктовой секции
   const setRaw = uCB((updater) => { setState(updater); }, []);
+
+  // Проверка: есть ли в секции хотя бы одно заполненное поле (отличное от дефолта)
+  const isSectionFilled = (sec) => {
+    if (sec.id === 'product') {
+      return !!state.productGender || (state.productCategories || []).length > 0 || !!state.productDetails;
+    }
+    return sec.steps.some((stepId) => {
+      const v = state[stepId];
+      const def = DEFAULT_STATE[stepId];
+      if (Array.isArray(v)) return v.length > 0;
+      if (def === undefined || def === '') return !!v;
+      return v !== def;
+    });
+  };
+
+  // Сброс всех полей секции
+  const resetSection = uCB((sec) => {
+    setState((prev) => {
+      const next = { ...prev };
+      sec.steps.forEach((stepId) => {
+        const def = DEFAULT_STATE[stepId];
+        next[stepId] = def !== undefined ? def : (window.FILTERS[stepId]?.multi ? [] : '');
+      });
+      if (sec.id === 'product') next.productItems = {};
+      return next;
+    });
+  }, []);
 
   const clearStep = uCB((stepId) => {
     const step = window.FILTERS[stepId];
@@ -2543,6 +2690,9 @@ function App() {
             <div className="section-head">
               <span className="section-num">{String(i + 1).padStart(2, '0')}</span>
               <h2 className="section-title">{sec.title}</h2>
+              {isSectionFilled(sec) && (
+                <button className="section-reset-btn" onClick={() => resetSection(sec)}>Сбросить раздел</button>
+              )}
               <span className="section-caption">{sec.caption}</span>
             </div>
 

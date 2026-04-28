@@ -25,11 +25,14 @@
       case 'ethnicity':
       case 'bodyType':
       case 'hairLength':
-      case 'facialHair':
       case 'features':
         return !isRef;
       case 'hairColor':
         return !isRef && !!state.hairLength && state.hairLength !== 'bald';
+      case 'facialHair':
+        return state.gender === 'male';
+      case 'featuresOverride':
+        return !isRef && (state.features || []).length > 0;
       // Продукт
       case 'productDetails':
         return (state.productCategories || []).length > 0;
@@ -90,14 +93,15 @@
         const allowed = new Set(visOpts.map((o) => o.id));
         const filtered = curVal.filter((v) => allowed.has(v));
         if (filtered.length !== curVal.length) { cleared.push(step.label); state[key] = filtered; }
-      } else if (curVal && !visOpts.find((o) => o.id === curVal)) {
+      } else if (step.kind !== 'text' && curVal && !visOpts.find((o) => o.id === curVal)) {
         cleared.push(step.label); state[key] = '';
       }
     };
 
     const dependents = {
-      gender: ['ageGroup', 'ethnicity', 'bodyType', 'hairLength', 'hairColor', 'facialHair', 'features'],
+      gender: ['ageGroup', 'ethnicity', 'bodyType', 'hairLength', 'hairColor', 'facialHair', 'features', 'featuresOverride'],
       hairLength: ['hairColor'],
+      features: ['featuresOverride'],
       locationMode: ['locationType', 'locationSpecific', 'season', 'timeOfDay'],
       locationType: ['locationSpecific', 'season', 'timeOfDay'],
       locationSpecific: ['season', 'timeOfDay'],
@@ -105,6 +109,14 @@
     (dependents[changedKey] || []).forEach(check);
     return cleared;
   };
+
+  // ---- Сборка INPUT_BLOCK ----
+  function buildInputBlock(s) {
+    if (s.gender === 'from_reference') {
+      return `- Images 1–2: reference photos of the fashion model whose appearance should be used.\n- Images 3–5: photos of the SAME garment/product from different angles.\n- The garment may be shown on a person, mannequin, hanger, or flat lay.`;
+    }
+    return `- Images 1–3: photos of the SAME garment/product from different angles.\n- The garment may be shown on a person, mannequin, hanger, or flat lay.`;
+  }
 
   // ---- Сборка MODEL_TYPE ----
   function buildModelType(s) {
@@ -141,7 +153,10 @@
     if (facial && facial.id !== 'clean_shaven' && s.gender === 'male') {
       extras.push(facial.promptText);
     }
-    if (features.length) extras.push(features.map((f) => f.promptText).join(', '));
+    if (features.length) {
+      const override = (s.featuresOverride || '').trim();
+      extras.push(override || features.map((f) => f.promptText).join(', '));
+    }
 
     return parts.join(' ') + (extras.length ? ', ' + extras.join(', ') : '');
   }
@@ -243,6 +258,7 @@ The location must feel:
     const ar = opt('aspectRatio', state.aspectRatio);
 
     return window.PROMPT_SKELETON
+      .replace('{{INPUT_BLOCK}}', buildInputBlock(state))
       .replace('{{MODEL_TYPE}}', model)
       .replace('{{PRODUCT}}', product)
       .replace('{{SCENE_DESCRIPTION_BLOCK}}\n', sceneBlock)

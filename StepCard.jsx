@@ -9,14 +9,12 @@ function StepHead({ step, value, onClear }) {
     <div className="step-head">
       <span className="step-label">{step.label}</span>
       {step.hint && <span className="step-hint">{step.hint}</span>}
-      {step.optional ? (
-        <span className="step-tag">не обязательно</span>
-      ) : null}
-      {filled && !step.optional && (
-        <button className="step-clear" onClick={onClear} title="Сбросить">сбросить</button>
+      <span style={{flex: 1}} />
+      {filled && (
+        <button className="step-clear" onClick={onClear}>сбросить</button>
       )}
-      {filled && step.optional && (
-        <button className="step-clear" onClick={onClear} title="Очистить">очистить</button>
+      {step.optional && (
+        <span className="step-tag">не обязательно</span>
       )}
     </div>
   );
