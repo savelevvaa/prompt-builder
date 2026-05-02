@@ -6,6 +6,9 @@ const STORAGE_KEY = 'prompt-builder-state-v2';
 const PRESETS_KEY = 'prompt-builder-presets-v1';
 
 const DEFAULT_STATE = {
+  referenceTypes: ['product'],
+  productPhotoCount: '2',
+  modelPhotoCount: '1',
   gender: '', ageGroup: '', ethnicity: '', bodyType: '',
   hairLength: '', hairColor: '', facialHair: '', features: [], featuresOverride: '',
   productGender: '',
@@ -42,6 +45,7 @@ const Icon = {
 };
 
 const GEN_MODELS = [
+  { name: 'AI Generator', url: 'https://wavespeed.ai/image-generator' },
   { name: 'Nano Banana 2', url: 'https://wavespeed.ai/models/google/nano-banana-2/edit' },
   { name: 'GPT-Image 2', url: 'https://wavespeed.ai/models/openai/gpt-image-2/edit' },
   { name: 'Seedream v5.0 Lite', url: 'https://wavespeed.ai/models/bytedance/seedream-v5.0-lite' },
@@ -130,8 +134,8 @@ function Outline({ sections, state, activeSection }) {
           const isActive = activeSection === sec.id;
           return (
             <a key={sec.id} href={`#sec-${sec.id}`} className={isActive ? 'is-active' : ''}>
-              <span>{String(i + 1).padStart(2, '0')} {sec.title}</span>
-              <span className="outline-count">{c.filled}/{c.total}</span>
+              <span>{String(i).padStart(2, '0')} {sec.title}</span>
+              {c.total > 0 && <span className="outline-count">{c.filled}/{c.total}</span>}
             </a>
           );
         })}
@@ -162,6 +166,53 @@ function ColResizer({ onResize }) {
       onMouseDown={(e) => { e.preventDefault(); setDragging(true); }}
       title="Перетащите, чтобы изменить ширину превью"
     />
+  );
+}
+
+// ---------- Inputs Section ----------
+function InputsSection({ state, setValue, flash }) {
+  const F = window.FILTERS;
+  const types = state.referenceTypes || ['product'];
+
+  const handleTypesChange = (newTypes) => {
+    const withProduct = newTypes.length === 0 ? ['product'] : newTypes.includes('product') ? newTypes : ['product', ...newTypes.filter(t => t !== 'product')];
+    setValue('referenceTypes', withProduct);
+  };
+
+  return (
+    <>
+      <StepCard
+        stepId="referenceTypes"
+        step={F.referenceTypes}
+        value={types}
+        options={window.getVisibleOptions('referenceTypes', state)}
+        onChange={handleTypesChange}
+        onClear={() => setValue('referenceTypes', ['product'])}
+        flash={flash === 'referenceTypes'}
+      />
+      {types.includes('product') && (
+        <StepCard
+          stepId="productPhotoCount"
+          step={F.productPhotoCount}
+          value={state.productPhotoCount || '2'}
+          options={window.getVisibleOptions('productPhotoCount', state)}
+          onChange={(v) => setValue('productPhotoCount', v)}
+          onClear={() => setValue('productPhotoCount', '2')}
+          flash={flash === 'productPhotoCount'}
+        />
+      )}
+      {types.includes('model') && (
+        <StepCard
+          stepId="modelPhotoCount"
+          step={F.modelPhotoCount}
+          value={state.modelPhotoCount || '1'}
+          options={window.getVisibleOptions('modelPhotoCount', state)}
+          onChange={(v) => setValue('modelPhotoCount', v)}
+          onClear={() => setValue('modelPhotoCount', '1')}
+          flash={flash === 'modelPhotoCount'}
+        />
+      )}
+    </>
   );
 }
 
@@ -332,6 +383,26 @@ function App() {
   const setValue = uCB((stepId, newVal) => {
     setState((prev) => {
       const next = { ...prev, [stepId]: newVal };
+      // Двусторонняя синхронизация: referenceTypes.model ↔ gender.from_reference
+      if (stepId === 'referenceTypes') {
+        const newHasModel = Array.isArray(newVal) && newVal.includes('model');
+        const prevHasModel = (prev.referenceTypes || []).includes('model');
+        if (newHasModel && !prevHasModel) {
+          next.gender = 'from_reference';
+          window.cleanupAfterChange(next, 'gender');
+        } else if (!newHasModel && prevHasModel && prev.gender === 'from_reference') {
+          next.gender = '';
+        }
+      }
+      if (stepId === 'gender') {
+        const rt = prev.referenceTypes || ['product'];
+        if (newVal === 'from_reference') {
+          if (!rt.includes('model')) next.referenceTypes = [...rt, 'model'];
+        } else if (prev.gender === 'from_reference') {
+          const filtered = rt.filter(t => t !== 'model');
+          next.referenceTypes = filtered.length ? filtered : ['product'];
+        }
+      }
       // При изменении features — авто-заполняем featuresOverride собранным текстом
       if (stepId === 'features' && Array.isArray(newVal)) {
         const texts = newVal
@@ -351,6 +422,10 @@ function App() {
   const setRaw = uCB((updater) => { setState(updater); }, []);
 
   const isSectionFilled = (sec) => {
+    if (sec.id === 'inputs') {
+      const types = state.referenceTypes || ['product'];
+      return types.includes('model') || state.productPhotoCount !== '2';
+    }
     if (sec.id === 'product') {
       return !!state.productGender || (state.productCategories || []).length > 0 || !!state.productDetails;
     }
@@ -371,6 +446,7 @@ function App() {
         next[stepId] = def !== undefined ? def : (window.FILTERS[stepId]?.multi ? [] : '');
       });
       if (sec.id === 'product') next.productItems = {};
+      if (sec.id === 'inputs' && prev.gender === 'from_reference') next.gender = '';
       return next;
     });
   }, []);
@@ -481,9 +557,9 @@ function App() {
         </div>
 
         {window.SECTIONS.map((sec, i) => (
-          <section key={sec.id} id={`sec-${sec.id}`} className="section" data-screen-label={`0${i + 1} ${sec.title}`}>
+          <section key={sec.id} id={`sec-${sec.id}`} className="section" data-screen-label={`0${i} ${sec.title}`}>
             <div className="section-head">
-              <span className="section-num">{String(i + 1).padStart(2, '0')}</span>
+              <span className="section-num">{String(i).padStart(2, '0')}</span>
               <h2 className="section-title">{sec.title}</h2>
               {isSectionFilled(sec) && (
                 <button className="section-reset-btn" onClick={() => resetSection(sec)}>Сбросить раздел</button>
@@ -491,8 +567,14 @@ function App() {
               <span className="section-caption">{sec.caption}</span>
             </div>
 
-            {/* Секция ПРОДУКТ рендерится отдельно */}
-            {sec.id === 'product' ? (
+            {/* Секции ВХОДНЫЕ ДАННЫЕ и ПРОДУКТ рендерятся отдельно */}
+            {sec.id === 'inputs' ? (
+              <InputsSection
+                state={state}
+                setValue={setValue}
+                flash={flashed}
+              />
+            ) : sec.id === 'product' ? (
               <ProductSection
                 state={state}
                 setValue={setValue}

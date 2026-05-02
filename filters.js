@@ -1,6 +1,43 @@
 // Каталог фильтров. Каждая опция имеет labelRu + promptText (англ., идёт в промт).
 
 window.FILTERS = {
+  referenceTypes: {
+    label: 'Тип референса',
+    hint: 'Что подаем на вход',
+    required: true,
+    multi: true,
+    kind: 'chips',
+    options: [
+      { id: 'product', labelRu: 'Товар', promptText: null },
+      { id: 'model', labelRu: 'Модель', promptText: null },
+    ],
+  },
+  productPhotoCount: {
+    label: 'Количество фото продукта',
+    required: true,
+    kind: 'chips',
+    options: [
+      { id: '1', labelRu: '1', promptText: '1' },
+      { id: '2', labelRu: '2', promptText: '2' },
+      { id: '3', labelRu: '3', promptText: '3' },
+      { id: '4', labelRu: '4', promptText: '4' },
+      { id: '5', labelRu: '5', promptText: '5' },
+      { id: '6', labelRu: '6', promptText: '6' },
+    ],
+  },
+  modelPhotoCount: {
+    label: 'Количество фото модели',
+    required: true,
+    kind: 'chips',
+    options: [
+      { id: '1', labelRu: '1', promptText: '1' },
+      { id: '2', labelRu: '2', promptText: '2' },
+      { id: '3', labelRu: '3', promptText: '3' },
+      { id: '4', labelRu: '4', promptText: '4' },
+      { id: '5', labelRu: '5', promptText: '5' },
+      { id: '6', labelRu: '6', promptText: '6' },
+    ],
+  },
   gender: {
     label: 'Пол модели',
     required: true,
@@ -448,6 +485,12 @@ window.FILTERS = {
 
 // Структура секций для левой колонки
 window.SECTIONS = [
+  {
+    id: 'inputs',
+    title: 'Входные данные',
+    caption: 'Что подаем на вход',
+    steps: ['referenceTypes', 'productPhotoCount', 'modelPhotoCount'],
+  },
   {
     id: 'model',
     title: 'Модель',

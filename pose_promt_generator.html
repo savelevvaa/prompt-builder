@@ -1,0 +1,1353 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=1280" />
+<title>Pose Generator — Fashion Marketplace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FAFAF7;
+  --bg-panel: #F3F3EE;
+  --bg-elev: #FFFFFF;
+  --ink: #1A1A1A;
+  --ink-soft: #2B2B28;
+  --muted: #6B6B66;
+  --muted-2: #94948E;
+  --border: #EAEAE4;
+  --border-strong: #D8D8D0;
+  --accent: #4A5240;
+  --accent-soft: rgba(74,82,64,0.08);
+  --accent-hover: #3c4234;
+  --danger: #8a3a2a;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --radius: 8px;
+  --radius-sm: 6px;
+  --shadow-sm: 0 1px 2px rgba(26,26,26,0.04);
+  --shadow-pop: 0 8px 32px -12px rgba(26,26,26,0.18);
+  --dur: 240ms;
+  --ease: cubic-bezier(.2,.7,.2,1);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+input, textarea { font-family: inherit; color: inherit; }
+
+/* HEADER */
+.app-header {
+  flex-shrink: 0;
+  height: 56px;
+  background: rgba(250,250,247,0.92);
+  backdrop-filter: saturate(140%) blur(10px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
+  gap: 20px;
+  z-index: 10;
+}
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 500; font-size: 13.5px; letter-spacing: -0.01em; }
+.brand-mark { width: 22px; height: 22px; border-radius: 4px; background: var(--ink); position: relative; }
+.brand-mark::after { content: ""; position: absolute; inset: 5px 5px auto auto; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+.brand-slash { color: var(--muted-2); font-weight: 400; margin: 0 2px; }
+.brand-sub { color: var(--muted); font-weight: 400; }
+.brand-dropdown {
+  position: absolute; top: calc(100% + 14px); left: 0;
+  width: 220px; background: var(--bg-elev);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: 0 8px 32px -12px rgba(26,26,26,0.18);
+  z-index: 300; overflow: hidden;
+  animation: fadeSlideIn var(--dur) var(--ease);
+}
+.hbtn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 11px; font-size: 12.5px; color: var(--muted);
+  border-radius: 6px; transition: all 160ms var(--ease);
+}
+.hbtn:hover { color: var(--ink); background: rgba(0,0,0,0.03); }
+.hbtn svg { width: 14px; height: 14px; }
+.hbtn-accent { background: var(--accent); color: #fff !important; padding: 7px 14px; font-weight: 500; }
+.hbtn-accent:hover { background: var(--accent-hover) !important; }
+.gen-wrap { position: relative; }
+.gen-dropdown {
+  position: absolute; top: calc(100% + 8px); right: 0;
+  width: 220px; background: var(--bg-elev);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: 0 8px 32px -12px rgba(26,26,26,0.18);
+  z-index: 300; overflow: hidden;
+  animation: fadeSlideIn var(--dur) var(--ease);
+}
+@keyframes fadeSlideIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+.gen-dropdown-head {
+  padding: 10px 14px 7px; font-size: 10px; color: var(--muted-2);
+  letter-spacing: 0.1em; text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+}
+.gen-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; color: var(--ink); text-decoration: none;
+  font-size: 13px; transition: background 120ms;
+  border-bottom: 1px solid var(--border);
+}
+.gen-item:last-child { border-bottom: none; }
+.gen-item:hover { background: var(--bg-panel); }
+
+/* LAYOUT */
+.app-body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0,1fr) 6px minmax(380px, 560px);
+  overflow: hidden;
+}
+
+/* LEFT COL */
+.left-col {
+  overflow-y: auto;
+  padding: 28px 36px 80px 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.left-col::-webkit-scrollbar { width: 6px; }
+.left-col::-webkit-scrollbar-track { background: transparent; }
+.left-col::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+
+.page-intro {
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+.page-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--muted-2);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.page-title {
+  font-size: 22px; font-weight: 500; letter-spacing: -0.02em;
+  margin: 0 0 6px 0; line-height: 1.2;
+}
+.page-lead { color: var(--muted); font-size: 13px; margin: 0; max-width: 480px; line-height: 1.6; }
+
+/* CARDS */
+.card {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: border-color 160ms var(--ease);
+}
+.card.is-filled { border-color: var(--border-strong); }
+.card.is-active-input { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
+.card-head {
+  padding: 16px 20px 14px 20px;
+  display: flex; align-items: baseline; gap: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.card-title { font-size: 14px; font-weight: 500; letter-spacing: -0.01em; }
+.card-hint { font-size: 12px; color: var(--muted); }
+.card-tag {
+  margin-left: auto; font-size: 11px; color: var(--muted);
+  border: 1px solid var(--border); border-radius: 999px; padding: 2px 8px;
+}
+.card-body { padding: 16px 20px; }
+
+/* PHOTO COUNT */
+.photo-count-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.count-btn {
+  width: 38px; height: 38px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13.5px; font-weight: 500;
+  background: var(--bg); border: 1.5px solid var(--border);
+  transition: all 140ms var(--ease);
+}
+.count-btn:hover { border-color: var(--border-strong); background: #fff; }
+.count-btn.is-active {
+  background: var(--ink); color: #fff; border-color: var(--ink);
+}
+
+/* UPLOAD GRID */
+.upload-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+.upload-slot {
+  position: relative;
+  width: 110px; height: 110px;
+  border-radius: var(--radius-sm);
+  border: 1.5px dashed var(--border-strong);
+  overflow: hidden;
+  transition: border-color 160ms var(--ease), background 160ms var(--ease);
+  cursor: pointer;
+}
+.upload-slot:hover { border-color: var(--accent); background: var(--accent-soft); }
+.upload-slot.has-image { border-style: solid; border-color: var(--border-strong); }
+.upload-slot input[type="file"] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 2;
+}
+.upload-slot-inner {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 6px; color: var(--muted-2); pointer-events: none;
+}
+.upload-slot-inner svg { width: 22px; height: 22px; }
+.upload-slot-inner span { font-size: 11px; }
+.upload-slot img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%; object-fit: cover;
+  pointer-events: none;
+}
+.upload-slot .remove-btn {
+  position: absolute; top: 4px; right: 4px; z-index: 3;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: rgba(26,26,26,0.7);
+  color: #fff;
+  display: none; align-items: center; justify-content: center;
+  font-size: 11px; line-height: 1;
+}
+.upload-slot:hover .remove-btn { display: flex; }
+
+/* Single model upload */
+.model-upload-slot {
+  position: relative;
+  width: 100%; height: 140px;
+  border-radius: var(--radius-sm);
+  border: 1.5px dashed var(--border-strong);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 160ms var(--ease);
+}
+.model-upload-slot:hover { border-color: var(--accent); background: var(--accent-soft); }
+.model-upload-slot.has-image { border-style: solid; border-color: var(--border-strong); height: 180px; }
+.model-upload-slot input[type="file"] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 2;
+}
+.model-upload-slot .slot-inner {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 8px; color: var(--muted);
+}
+.model-upload-slot .slot-inner svg { width: 28px; height: 28px; }
+.model-upload-slot .slot-inner .slot-label { font-size: 13px; font-weight: 500; }
+.model-upload-slot .slot-inner .slot-sub { font-size: 11.5px; color: var(--muted-2); }
+.model-upload-slot img {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none;
+}
+.model-upload-slot .remove-btn {
+  position: absolute; top: 8px; right: 8px; z-index: 3;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: rgba(26,26,26,0.7); color: #fff;
+  display: none; align-items: center; justify-content: center;
+  font-size: 12px;
+}
+.model-upload-slot:hover .remove-btn { display: flex; }
+
+/* RESIZER */
+.col-resizer {
+  cursor: col-resize; background: transparent; position: relative; user-select: none;
+}
+.col-resizer::before {
+  content: ""; position: absolute; top: 0; bottom: 0; left: 50%;
+  width: 1px; background: var(--border); transform: translateX(-50%);
+}
+.col-resizer::after {
+  content: ""; position: absolute; top: 50%; left: 50%;
+  width: 2px; height: 34px; background: var(--border-strong); border-radius: 2px;
+  transform: translate(-50%,-50%); opacity: 0; transition: opacity 160ms;
+}
+.col-resizer:hover::after { opacity: 1; }
+.col-resizer:hover::before { background: var(--accent); }
+body.resizing { cursor: col-resize !important; user-select: none !important; }
+body.resizing * { user-select: none !important; }
+
+/* RIGHT COL */
+.right-col {
+  background: var(--bg-panel);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* PREVIEW TABS */
+.preview-head {
+  padding: 18px 22px 14px 22px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.preview-tabs {
+  display: flex; gap: 2px;
+  padding: 3px;
+  background: rgba(26,26,26,0.04);
+  border-radius: 8px;
+  width: fit-content;
+  font-size: 12.5px;
+}
+.preview-tab {
+  padding: 6px 12px; border-radius: 6px; color: var(--muted);
+  transition: all 140ms var(--ease);
+}
+.preview-tab.is-active {
+  background: #fff; color: var(--ink); box-shadow: var(--shadow-sm);
+}
+.preview-head-sub {
+  margin-top: 10px; font-size: 11.5px; color: var(--muted);
+  display: flex; align-items: center; gap: 8px;
+}
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border-strong); }
+.status-dot.ready { background: var(--accent); }
+
+/* PROMPT PANEL */
+.prompt-panel {
+  display: flex; flex-direction: column;
+  overflow: hidden; border-bottom: 1px solid var(--border);
+  min-height: 120px;
+  /* height set by JS via flex-basis */
+}
+
+/* ROW RESIZER (vertical, between prompt and response) */
+.row-resizer {
+  flex-shrink: 0;
+  height: 6px;
+  cursor: row-resize;
+  background: transparent;
+  position: relative;
+  user-select: none;
+  z-index: 5;
+}
+.row-resizer::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 50%;
+  height: 1px; background: var(--border); transform: translateY(-50%);
+}
+.row-resizer::after {
+  content: ""; position: absolute; left: 50%; top: 50%;
+  width: 34px; height: 2px; background: var(--border-strong); border-radius: 2px;
+  transform: translate(-50%,-50%); opacity: 0; transition: opacity 160ms;
+}
+.row-resizer:hover::after { opacity: 1; }
+.row-resizer:hover::before { background: var(--accent); }
+body.row-resizing { cursor: row-resize !important; user-select: none !important; }
+body.row-resizing * { user-select: none !important; }
+.prompt-body {
+  flex: 1; overflow-y: auto;
+  padding: 18px 22px;
+  font-family: var(--font-mono);
+  font-size: 12px; line-height: 1.7;
+  color: var(--ink-soft);
+  white-space: pre-wrap; word-break: break-word;
+}
+.prompt-body::-webkit-scrollbar { width: 6px; }
+.prompt-body::-webkit-scrollbar-track { background: transparent; }
+.prompt-body::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+.prompt-textarea {
+  flex: 1; border: none; background: var(--bg-panel);
+  padding: 18px 22px;
+  font-family: var(--font-mono); font-size: 12px; line-height: 1.7;
+  color: var(--ink-soft); resize: none; outline: none;
+}
+.ptoken { color: var(--accent); background: var(--accent-soft); padding: 1px 3px; border-radius: 3px; font-weight: 500; }
+.ptoken.missing { color: #8a4228; background: rgba(184,92,60,0.09); font-style: italic; }
+.psection {
+  display: block;
+  font-family: var(--font-sans); font-size: 10px; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--muted); margin-top: 12px; margin-bottom: 3px;
+}
+
+.prompt-actions {
+  padding: 12px 18px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.btn-send {
+  width: 100%;
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  padding: 12px 20px;
+  background: var(--accent); color: #fff;
+  border-radius: 8px; font-size: 14px; font-weight: 500;
+  letter-spacing: -0.01em;
+  transition: all 160ms var(--ease);
+}
+.btn-send:hover:not(:disabled) { background: var(--accent-hover); }
+.btn-send:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-send.is-loading { background: var(--accent-hover); }
+.btn-send svg { width: 15px; height: 15px; }
+
+/* SPINNER */
+.spinner {
+  width: 15px; height: 15px;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* RESPONSE PANEL */
+.response-panel {
+  display: flex; flex-direction: column; overflow: hidden;
+  flex: 1; min-height: 0;
+}
+.response-head {
+  padding: 14px 22px 12px 22px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  display: flex; align-items: center; gap: 10px;
+}
+.response-head-title { font-size: 13px; font-weight: 500; }
+.response-head-meta { font-size: 11.5px; color: var(--muted); margin-left: auto; }
+
+.response-body {
+  flex: 1; overflow-y: auto;
+  padding: 18px 22px;
+  font-family: var(--font-mono);
+  font-size: 12px; line-height: 1.7;
+  color: var(--ink-soft);
+  white-space: pre-wrap; word-break: break-word;
+}
+.response-body::-webkit-scrollbar { width: 6px; }
+.response-body::-webkit-scrollbar-track { background: transparent; }
+.response-body::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+.response-empty {
+  color: var(--muted-2); font-family: var(--font-sans);
+  font-size: 13px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px; height: 100%; padding: 40px;
+}
+.response-empty svg { opacity: 0.25; }
+.response-pose-block {
+  border: 1px solid var(--border); border-radius: 6px;
+  overflow: hidden; margin-bottom: 10px;
+  animation: fadeSlide 220ms var(--ease) both;
+}
+@keyframes fadeSlide { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.pose-head {
+  padding: 9px 14px;
+  background: var(--bg-elev);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+  cursor: pointer; user-select: none;
+}
+.pose-num {
+  font-family: var(--font-mono); font-size: 10px; color: var(--muted);
+  background: var(--bg-panel); border: 1px solid var(--border);
+  border-radius: 4px; padding: 2px 6px;
+}
+.pose-name { font-size: 13px; font-weight: 500; }
+.pose-chev { margin-left: auto; color: var(--muted-2); transition: transform 200ms var(--ease); }
+.pose-chev.open { transform: rotate(90deg); }
+.pose-content {
+  padding: 12px 14px;
+  font-family: var(--font-mono); font-size: 11.5px; line-height: 1.7;
+  color: var(--ink-soft);
+  white-space: pre-wrap; word-break: break-word;
+  background: var(--bg);
+}
+.pose-content-label {
+  display: inline-block;
+  font-family: var(--font-sans); font-size: 9.5px; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--muted); margin-top: 8px; margin-bottom: 2px;
+}
+
+.response-actions {
+  padding: 12px 18px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  display: flex; gap: 8px;
+}
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 10px 16px; font-size: 13.5px; font-weight: 500;
+  border-radius: 7px; transition: all 160ms var(--ease);
+}
+.btn svg { width: 14px; height: 14px; }
+.btn-primary { background: var(--accent); color: #fff; flex: 1; }
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-primary.is-copied { background: var(--ink); }
+.btn-ghost { color: var(--muted); padding: 10px 12px; }
+.btn-ghost:hover { color: var(--ink); background: rgba(0,0,0,0.04); }
+
+/* TOAST */
+.toast-stack { position: fixed; bottom: 24px; left: 36px; z-index: 200; display: flex; flex-direction: column; gap: 8px; }
+.toast {
+  padding: 10px 14px; background: var(--ink); color: #fff;
+  border-radius: 6px; font-size: 12.5px; max-width: 360px;
+  box-shadow: var(--shadow-pop);
+  animation: toastIn 200ms var(--ease) both;
+}
+.toast.warn { background: #f0ecd8; color: var(--ink); }
+@keyframes toastIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* LOADING BAR */
+.loading-bar {
+  height: 2px; background: var(--accent);
+  width: 0%; transition: width 0.4s var(--ease);
+}
+
+/* Error state */
+.error-msg {
+  padding: 14px 18px; background: rgba(138,58,42,0.06);
+  border: 1px solid rgba(138,58,42,0.2);
+  border-radius: 7px; color: var(--danger);
+  font-size: 13px; line-height: 1.6;
+  margin: 0 0 12px 0;
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="app-header">
+  <div class="brand" id="brandBtn" onclick="toggleBrandMenu()" style="cursor:pointer;user-select:none;position:relative;">
+    <span class="brand-mark"></span>
+    <span>Prompt Builder</span>
+    <span class="brand-slash">/</span>
+    <span class="brand-sub">fashion marketplace</span>
+    <div class="brand-dropdown" id="brandDropdown" style="display:none;">
+      <div class="gen-dropdown-head">Инструменты</div>
+      <a href="index.html" class="gen-item">Конструктор образа</a>
+      <a href="pose_promt_generator.html" class="gen-item" style="font-weight:500;color:var(--accent);">Генератор поз</a>
+      <span class="gen-item" style="opacity:0.4;cursor:not-allowed;pointer-events:none;">Конструктор промта поз</span>
+    </div>
+  </div>
+  <div class="header-actions" style="margin-left:auto;display:flex;align-items:center;gap:6px;">
+    <button class="hbtn" onclick="resetAll()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+      Сбросить всё
+    </button>
+    <div class="gen-wrap" id="llmWrap">
+      <button class="hbtn hbtn-accent" onclick="toggleLlmMenu()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg>
+        Перейти к LLM
+      </button>
+      <div class="gen-dropdown" id="llmDropdown" style="display:none;">
+        <div class="gen-dropdown-head">Выберите модель</div>
+        <a href="https://wavespeed.ai/llm/model/openai/gpt-5.4" target="_blank" rel="noopener noreferrer" class="gen-item">
+          <span>ChatGPT-5.4</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M7 17L17 7"/><path d="M7 7h10v10"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- BODY -->
+<div class="app-body" id="appBody">
+
+  <!-- LEFT -->
+  <div class="left-col" id="leftCol">
+
+    <div class="page-intro">
+      <div class="page-eyebrow">POSE GENERATOR · marketplace cards</div>
+      <h1 class="page-title">Генератор поз для примерки</h1>
+      <p class="page-lead">Загрузите фото продукта и фото модели в одежде — AI сгенерирует 8 оптимальных поз для маркетплейса с точным сохранением одежды, модели и локации.</p>
+    </div>
+
+    <!-- BLOCK 1: Product photos count -->
+    <div class="card" id="cardCount">
+      <div class="card-head">
+        <span class="card-title">Количество фото продукта</span>
+        <span class="card-hint">От 1 до 5</span>
+      </div>
+      <div class="card-body">
+        <div class="photo-count-row">
+          <button class="count-btn" data-n="1" onclick="setPhotoCount(1)">1</button>
+          <button class="count-btn" data-n="2" onclick="setPhotoCount(2)">2</button>
+          <button class="count-btn is-active" data-n="3" onclick="setPhotoCount(3)">3</button>
+          <button class="count-btn" data-n="4" onclick="setPhotoCount(4)">4</button>
+          <button class="count-btn" data-n="5" onclick="setPhotoCount(5)">5</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- BLOCK 2: Product photos upload -->
+    <div class="card" id="cardProduct">
+      <div class="card-head">
+        <span class="card-title">Фото продукта</span>
+        <span class="card-hint">Разные ракурсы одного изделия</span>
+        <span class="card-tag" id="productFillTag">0/3</span>
+      </div>
+      <div class="card-body">
+        <div class="upload-grid" id="productGrid"></div>
+      </div>
+    </div>
+
+    <!-- BLOCK 3: Model photo -->
+    <div class="card" id="cardModel">
+      <div class="card-head">
+        <span class="card-title">Фото модели в одежде</span>
+        <span class="card-hint">Референс позы и локации</span>
+        <span class="card-tag is-model">обязательно</span>
+      </div>
+      <div class="card-body">
+        <div class="model-upload-slot" id="modelSlot" onclick="triggerModelPicker()">
+          <input type="file" id="modelInput" accept="image/*" onchange="handleModelUpload(event)" style="pointer-events:none;" />
+          <div class="slot-inner" id="modelInner">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5"/>
+              <path d="M21 15l-5-5L5 21"/>
+            </svg>
+            <span class="slot-label">Выбрать фото модели</span>
+            <span class="slot-sub">JPG, PNG, WEBP — фото модели в одежде на локации</span>
+          </div>
+          <img id="modelPreview" style="display:none;" alt="model" />
+          <button class="remove-btn" onclick="removeModel(event)">✕</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RESIZER -->
+  <div class="col-resizer" id="resizer"></div>
+
+  <!-- RIGHT -->
+  <div class="right-col" id="rightCol">
+
+    <!-- PROMPT SECTION -->
+    <div class="prompt-panel" id="promptPanel">
+      <div class="preview-head">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div class="preview-tabs">
+            <button class="preview-tab is-active" id="tabPreview" onclick="setTab('preview')">Превью</button>
+            <button class="preview-tab" id="tabEdit" onclick="setTab('edit')">Ручное редактирование</button>
+          </div>
+          <div style="margin-left:auto; font-size:11px; color:var(--muted-2); font-family:var(--font-mono); letter-spacing:0.04em;" id="charCount">0 СИМВ</div>
+        </div>
+        <div class="preview-head-sub">
+          <div class="status-dot" id="readyDot"></div>
+          <span id="readyLabel">Добавьте фото продукта и модели для отправки</span>
+        </div>
+        <div class="loading-bar" id="loadingBar"></div>
+      </div>
+
+      <div class="prompt-body" id="promptBody"></div>
+      <textarea class="prompt-textarea" id="promptTextarea" spellcheck="false" style="display:none;" oninput="onManualEdit(event)"></textarea>
+
+      <div class="prompt-actions">
+        <button class="btn-send" id="btnSend" onclick="sendRequest()" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" id="sendIcon"><path d="M22 2L11 13"/><path d="M22 2L15 22l-4-9-9-4z"/></svg>
+          <span id="sendLabel">Отправить запрос</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ROW RESIZER -->
+    <div class="row-resizer" id="rowResizer"></div>
+
+    <!-- RESPONSE SECTION -->
+    <div class="response-panel" id="responsePanel">
+      <div class="response-head">
+        <span class="response-head-title">Ответ модели</span>
+        <span class="response-head-meta" id="responseMeta"></span>
+      </div>
+      <div class="response-body" id="responseBody">
+        <div class="response-empty" id="responseEmpty">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <path d="M8 12h8M8 8h5M8 16h3"/>
+          </svg>
+          <span>Ответ появится здесь после отправки запроса</span>
+        </div>
+      </div>
+      <div class="response-actions">
+        <button class="btn btn-primary" id="btnCopy" onclick="copyResponse()" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>
+          Скопировать ответ
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TOASTS -->
+<div class="toast-stack" id="toastStack"></div>
+
+<script>
+// ─── STATE ────────────────────────────────────────────────────────────────────
+// Ключ API хранится только в Cloudflare Secret — браузер его не знает
+// Замени URL ниже на адрес своего Cloudflare Worker
+const API_URL = 'https://wavespeed-proxy.lesh77906.workers.dev';
+const MODEL   = 'openai/gpt-5.4';
+
+let photoCount   = 3;
+let productFiles = []; // [{ file, dataUrl }] indexed 0..photoCount-1
+let modelFile    = null; // { file, dataUrl }
+let currentTab   = 'preview';
+let manualPrompt = '';
+let lastResponse = '';
+let isLoading    = false;
+let toastSeq     = 0;
+
+// ─── INIT ──────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  renderProductGrid();
+  updatePrompt();
+  initResizer();
+  initRowResizer();
+});
+
+// ─── PHOTO COUNT ──────────────────────────────────────────────────────────────
+function setPhotoCount(n) {
+  photoCount = n;
+  // trim product files if needed
+  productFiles = productFiles.slice(0, n);
+  document.querySelectorAll('.count-btn').forEach(btn => {
+    btn.classList.toggle('is-active', +btn.dataset.n === n);
+  });
+  document.getElementById('productFillTag').textContent = `${productFiles.filter(Boolean).length}/${n}`;
+  renderProductGrid();
+  updatePrompt();
+}
+
+// ─── PRODUCT GRID ─────────────────────────────────────────────────────────────
+function renderProductGrid() {
+  const grid = document.getElementById('productGrid');
+  grid.innerHTML = '';
+  for (let i = 0; i < photoCount; i++) {
+    const pf = productFiles[i];
+    const slot = document.createElement('div');
+    slot.className = 'upload-slot' + (pf ? ' has-image' : '');
+    slot.innerHTML = `
+      <input type="file" accept="image/*" data-idx="${i}" onchange="handleProductUpload(event,${i})" />
+      <div class="upload-slot-inner">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M5 12h14"/></svg>
+        <span>Фото ${i + 1}</span>
+      </div>
+      ${pf ? `<img src="${pf.dataUrl}" alt="p${i}" />` : ''}
+      ${pf ? `<button class="remove-btn" onclick="removeProduct(event,${i})">✕</button>` : ''}
+    `;
+    grid.appendChild(slot);
+  }
+}
+
+function handleProductUpload(e, idx) {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  readFileAsDataUrl(file).then(dataUrl => {
+    productFiles[idx] = { file, dataUrl };
+    const tag = document.getElementById('productFillTag');
+    tag.textContent = `${productFiles.filter(Boolean).length}/${photoCount}`;
+    renderProductGrid();
+    updatePrompt();
+    document.getElementById('cardProduct').classList.toggle('is-filled', productFiles.filter(Boolean).length === photoCount);
+    checkReady();
+  });
+}
+
+function removeProduct(e, idx) {
+  e.stopPropagation();
+  productFiles[idx] = null;
+  const tag = document.getElementById('productFillTag');
+  tag.textContent = `${productFiles.filter(Boolean).length}/${photoCount}`;
+  renderProductGrid();
+  document.getElementById('cardProduct').classList.remove('is-filled');
+  updatePrompt();
+  checkReady();
+}
+
+// ─── MODEL UPLOAD ─────────────────────────────────────────────────────────────
+function triggerModelPicker() {
+  document.getElementById('modelInput').click();
+}
+
+function handleModelUpload(e) {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  readFileAsDataUrl(file).then(dataUrl => {
+    modelFile = { file, dataUrl };
+    const prev = document.getElementById('modelPreview');
+    prev.src = dataUrl;
+    prev.style.display = 'block';
+    document.getElementById('modelInner').style.display = 'none';
+    document.getElementById('cardModel').classList.add('is-filled');
+    updatePrompt();
+    checkReady();
+  });
+}
+
+function removeModel(e) {
+  e.stopPropagation();
+  modelFile = null;
+  document.getElementById('modelPreview').style.display = 'none';
+  document.getElementById('modelInner').style.display = 'flex';
+  document.getElementById('modelInput').value = '';
+  document.getElementById('cardModel').classList.remove('is-filled');
+  updatePrompt();
+  checkReady();
+}
+
+// ─── PROMPT BUILDER ───────────────────────────────────────────────────────────
+function buildPromptText() {
+  const filled = productFiles.filter(Boolean);
+  const totalImgs = filled.length + (modelFile ? 1 : 0);
+  const modelImgNum = totalImgs;
+
+  const inputLines = filled.map((_, i) => `${i + 1}. Product photo IMAGE ${i + 1}`).join('\n');
+  const modelLine  = modelFile
+    ? `${filled.length + 1}. Photo of the model wearing the product IMAGE ${modelImgNum}`
+    : `${filled.length + 1}. Photo of the model wearing the product IMAGE {{MODEL_PHOTO}}`;
+
+  const garmentNote = filled.length > 0
+    ? `Refer to the product photos (IMAGE 1${filled.length > 1 ? `–${filled.length}` : ''}) for exact garment details: color, material, fit, silhouette, length, texture, seams, hardware, and all design elements.`
+    : `{{GARMENT_DESCRIPTION — add product photos above}}`;
+
+  return `INPUT:
+${inputLines}
+${modelLine}
+
+TASK:
+Analyze the input images and generate the best model pose descriptions for marketplace product photography.
+
+Your goal is to describe poses that help present the product in the most effective way for e-commerce and marketplace listings. MAKE prompts for 8 poses
+
+GARMENT DESCRIPTION:
+${garmentNote}
+
+The poses must:
+- showcase the product clearly and attractively
+- highlight the fit, silhouette, length, texture, and key details
+- use commercially effective and natural body positioning
+- keep the product as the main focus
+- be suitable for e-commerce, catalog, and marketplace product cards
+- be realistic and easy to reproduce in an image generation workflow
+
+STRICT PRESERVATION RULE:
+Under no circumstances may the AI change the clothing on the model, change the model, or change the location.
+
+The AI must preserve exactly as shown in the reference images:
+- the same clothing and all of its details
+- the same model and identity
+- the same location and background
+
+The AI is strictly forbidden to:
+- change, replace, redesign, remove, or add any clothing item
+- change the product's design, color, shade, fabric, texture, fit, silhouette, proportions, length, stitching, seams, buttons, zippers, cuffs, waistband, pockets, hardware, labels, prints, or patterns
+- change the model's face, identity, body shape, body proportions, skin tone, hairstyle, hair color, age appearance, or overall look
+- replace the model with another person
+- change, replace, restyle, regenerate, or alter the location or background
+- move the model to a different place
+- add a new environment or modify the existing setting
+
+ALLOWED CHANGES:
+Only the following may change:
+- pose
+- posture
+- hand placement
+- arm position
+- leg placement
+- foot placement
+- shoulder angle
+- head direction
+- gaze direction
+- camera angle
+- framing
+
+POSE REQUIREMENTS:
+- poses must improve product visibility
+- poses must not hide the product
+- poses must not distort the clothing
+- poses must not create unrealistic folds, tension, or deformation
+- poses must not be overly dramatic, editorial, or distracting
+- poses must look natural, clean, commercially appealing, and marketplace-friendly
+
+OUTPUT FORMAT:
+Create a structured list of poses in English.
+
+For each pose, provide:
+1. Pose name
+2. Full pose description
+3. Camera angle
+4. What product features this pose highlights
+5. AI generation notes
+
+WRITING STYLE:
+Each pose description must be written as a ready-to-use prompt fragment for an image generation model.
+Use clear, visual, practical language.
+Focus on: body position, shoulders, arms, hands, torso, legs, feet, posture, head angle, gaze direction, product visibility.
+
+OUTPUT EXAMPLE:
+
+Pose 1: Front View Clean Catalog Pose
+Description: The model stands facing the camera directly with a relaxed upright posture, shoulders straight, arms naturally lowered along the body, one leg slightly relaxed for a natural silhouette. The product is fully visible from the front without obstruction.
+Camera angle: Eye-level, full-body shot.
+Highlights: Front fit, silhouette, product length, neckline, waistline, sleeves, and overall proportions.
+AI notes: Keep the pose clean, natural, minimal, and marketplace-friendly. Preserve the clothing, model, and location exactly as in the reference images.
+
+POSES TO GENERATE:
+1. Front view pose
+2. 3/4 angle pose
+3. Side view pose
+4. Back view pose
+5. Detail-focused pose
+6. Lifestyle marketplace pose
+7. Premium catalog pose
+8. Natural walking or movement pose
+
+FINAL INSTRUCTION:
+Analyze the reference images and generate the best pose descriptions for this specific product.
+Do not change the clothing on the model, do not change the model, and do not change the location.
+The clothing, model, and location must remain 100% identical to the reference images.
+Only the pose and camera angle/framing may change.`;
+}
+
+function updatePrompt() {
+  const text = buildPromptText();
+  document.getElementById('charCount').textContent = text.length.toLocaleString('ru-RU') + ' СИМВ';
+  if (currentTab === 'preview') renderPromptPreview(text);
+  else if (currentTab === 'edit' && !manualPrompt) {
+    document.getElementById('promptTextarea').value = text;
+  }
+  if (currentTab === 'edit') {
+    document.getElementById('charCount').textContent = (manualPrompt || text).length.toLocaleString('ru-RU') + ' СИМВ';
+  }
+}
+
+function renderPromptPreview(text) {
+  const body = document.getElementById('promptBody');
+  const sectionKeywords = ['INPUT:', 'TASK:', 'GARMENT DESCRIPTION:', 'The poses must:', 'STRICT PRESERVATION RULE:', 'The AI must preserve exactly as shown in the reference images:', 'The AI is strictly forbidden to:', 'ALLOWED CHANGES:', 'POSE REQUIREMENTS:', 'OUTPUT FORMAT:', 'WRITING STYLE:', 'OUTPUT EXAMPLE:', 'POSES TO GENERATE:', 'FINAL INSTRUCTION:'];
+  const dynTokens = ['IMAGE 1', 'IMAGE 2', 'IMAGE 3', 'IMAGE 4', 'IMAGE 5', 'IMAGE 6'];
+
+  // simple highlight
+  let escaped = text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  sectionKeywords.forEach(k => {
+    const kEsc = k.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    escaped = escaped.replace(new RegExp(kEsc.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'g'),
+      `<span class="psection">${kEsc}</span>`);
+  });
+  dynTokens.forEach(k => {
+    escaped = escaped.replace(new RegExp(k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'g'),
+      `<span class="ptoken">${k}</span>`);
+  });
+  escaped = escaped.replace(/\{\{[^}]+\}\}/g, m => `<span class="ptoken missing">${m}</span>`);
+
+  body.innerHTML = escaped;
+}
+
+function setTab(tab) {
+  currentTab = tab;
+  document.getElementById('tabPreview').classList.toggle('is-active', tab === 'preview');
+  document.getElementById('tabEdit').classList.toggle('is-active', tab === 'edit');
+  const body = document.getElementById('promptBody');
+  const ta   = document.getElementById('promptTextarea');
+  if (tab === 'preview') {
+    body.style.display = 'block'; ta.style.display = 'none';
+    renderPromptPreview(buildPromptText());
+  } else {
+    body.style.display = 'none'; ta.style.display = 'flex';
+    if (!manualPrompt) { manualPrompt = buildPromptText(); }
+    ta.value = manualPrompt;
+  }
+  const text = tab === 'edit' ? (manualPrompt || buildPromptText()) : buildPromptText();
+  document.getElementById('charCount').textContent = text.length.toLocaleString('ru-RU') + ' СИМВ';
+}
+
+function onManualEdit(e) {
+  manualPrompt = e.target.value;
+  document.getElementById('charCount').textContent = manualPrompt.length.toLocaleString('ru-RU') + ' СИМВ';
+}
+
+// ─── READY CHECK ──────────────────────────────────────────────────────────────
+function checkReady() {
+  const filledCount  = productFiles.filter(Boolean).length;
+  const hasProduct   = filledCount > 0;
+  const hasModel     = !!modelFile;
+  const ready        = hasProduct && hasModel && !isLoading;
+  const btnSend      = document.getElementById('btnSend');
+  const dot          = document.getElementById('readyDot');
+  const lbl          = document.getElementById('readyLabel');
+  btnSend.disabled   = !ready;
+
+  if (hasProduct && hasModel) {
+    dot.className = 'status-dot ready';
+    lbl.textContent = `Готово к отправке — ${filledCount} фото продукта + фото модели`;
+  } else if (hasProduct) {
+    dot.className = 'status-dot';
+    lbl.textContent = 'Добавьте фото модели для отправки';
+  } else {
+    dot.className = 'status-dot';
+    lbl.textContent = 'Добавьте фото продукта и модели для отправки';
+  }
+}
+
+// ─── API REQUEST ──────────────────────────────────────────────────────────────
+async function sendRequest() {
+  if (isLoading) return;
+
+  const promptText = currentTab === 'edit' && manualPrompt ? manualPrompt : buildPromptText();
+  const productImgs = productFiles.filter(Boolean);
+  if (!productImgs.length || !modelFile) {
+    pushToast('Добавьте фото продукта и модели', { warn: true });
+    return;
+  }
+
+  isLoading = true;
+  setLoadingState(true);
+
+  // Build multimodal message content
+  const content = [];
+
+  // Add product images — use dataUrl directly to avoid MIME type reconstruction issues
+  productImgs.forEach((pf) => {
+    content.push({
+      type: 'image_url',
+      image_url: { url: pf.dataUrl }
+    });
+  });
+
+  // Add model image (last)
+  content.push({
+    type: 'image_url',
+    image_url: { url: modelFile.dataUrl }
+  });
+
+  // Add prompt text
+  content.push({ type: 'text', text: promptText });
+
+  let bar = 0;
+  const barInterval = setInterval(() => {
+    bar = Math.min(bar + 3, 85);
+    document.getElementById('loadingBar').style.width = bar + '%';
+  }, 400);
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        // Ключ прокси добавляет сам из .env — браузер не знает
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        messages: [{ role: 'user', content }],
+        max_tokens: 4096,
+        stream: false,
+      }),
+    });
+
+    clearInterval(barInterval);
+    document.getElementById('loadingBar').style.width = '100%';
+
+    if (!res.ok) {
+      const errText = await res.text();
+      let detail = errText.slice(0, 400);
+      try { detail = JSON.stringify(JSON.parse(errText), null, 2).slice(0, 400); } catch {}
+      throw new Error(`HTTP ${res.status} ${res.statusText}\n${detail}`);
+    }
+
+    const rawText = await res.text();
+
+    // Debug: log raw response to console
+    console.log('[API raw response]', rawText.slice(0, 300));
+
+    let data;
+    try {
+      // Strip any non-JSON prefix (e.g. stray headers from proxy)
+      const jsonStart = rawText.indexOf('{');
+      const jsonText  = jsonStart > 0 ? rawText.slice(jsonStart) : rawText;
+      data = JSON.parse(jsonText);
+    } catch (e) {
+      // Response is not JSON — show raw for debugging
+      throw new Error(`Ответ не является JSON (${rawText.length} байт):\n${rawText.slice(0, 600)}`);
+    }
+
+    // Some APIs return error with status 200
+    if (data.error) {
+      throw new Error(data.error.message || JSON.stringify(data.error));
+    }
+
+    const answer = data.choices?.[0]?.message?.content || '';
+    lastResponse = answer;
+
+    setTimeout(() => { document.getElementById('loadingBar').style.width = '0%'; }, 600);
+    renderResponse(answer);
+    document.getElementById('btnCopy').disabled = false;
+    document.getElementById('responseMeta').textContent = `${answer.length.toLocaleString('ru-RU')} символов`;
+    pushToast('Ответ получен — ' + countPoses(answer) + ' поз');
+
+  } catch (err) {
+    clearInterval(barInterval);
+    document.getElementById('loadingBar').style.width = '0%';
+    renderError(err.message);
+    pushToast('Ошибка запроса: ' + err.message.slice(0,80), { warn: true });
+    console.error(err);
+  } finally {
+    isLoading = false;
+    setLoadingState(false);
+  }
+}
+
+function setLoadingState(loading) {
+  const btn   = document.getElementById('btnSend');
+  const icon  = document.getElementById('sendIcon');
+  const label = document.getElementById('sendLabel');
+
+  if (loading) {
+    btn.disabled = true;
+    btn.classList.add('is-loading');
+    icon.outerHTML = '<div class="spinner" id="sendIcon"></div>';
+    label.textContent = 'Отправка запроса…';
+  } else {
+    btn.classList.remove('is-loading');
+    const spinEl = document.getElementById('sendIcon');
+    if (spinEl) spinEl.outerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" id="sendIcon"><path d="M22 2L11 13"/><path d="M22 2L15 22l-4-9-9-4z"/></svg>';
+    label.textContent = 'Отправить запрос';
+    checkReady();
+  }
+}
+
+// ─── RESPONSE RENDER ──────────────────────────────────────────────────────────
+function countPoses(text) {
+  const m = text.match(/^Pose \d+:/gm);
+  return m ? m.length : '—';
+}
+
+function renderResponse(text) {
+  const body = document.getElementById('responseBody');
+  document.getElementById('responseEmpty').style.display = 'none';
+
+  // Try to parse pose blocks
+  const poseRegex = /Pose (\d+):\s*([^\n]+)([\s\S]*?)(?=Pose \d+:|$)/g;
+  let match;
+  let found = false;
+  body.innerHTML = '';
+
+  while ((match = poseRegex.exec(text)) !== null) {
+    found = true;
+    const num  = match[1];
+    const name = match[2].trim();
+    const body2 = match[3].trim();
+
+    const block = document.createElement('div');
+    block.className = 'response-pose-block';
+    block.style.animationDelay = (parseInt(num) - 1) * 60 + 'ms';
+
+    let contentHtml = body2
+      .replace(/^Description:/gm, '<span class="pose-content-label">Description</span>')
+      .replace(/^Camera angle:/gm, '<span class="pose-content-label">Camera angle</span>')
+      .replace(/^Highlights:/gm, '<span class="pose-content-label">Highlights</span>')
+      .replace(/^AI notes:/gm, '<span class="pose-content-label">AI notes</span>');
+
+    block.innerHTML = `
+      <div class="pose-head" onclick="togglePose(this)">
+        <span class="pose-num">POSE ${num}</span>
+        <span class="pose-name">${name}</span>
+        <svg class="pose-chev open" width="12" height="12" viewBox="0 0 12 12"><path d="M4 2 L8 6 L4 10" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+      </div>
+      <div class="pose-content">${contentHtml}</div>
+    `;
+    body.appendChild(block);
+  }
+
+  if (!found) {
+    // Fallback: just display raw text
+    body.innerHTML = `<div style="font-family:var(--font-mono);font-size:12px;line-height:1.7;white-space:pre-wrap;color:var(--ink-soft)">${text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>`;
+  }
+}
+
+function renderError(msg) {
+  const body = document.getElementById('responseBody');
+  document.getElementById('responseEmpty').style.display = 'none';
+  const safeMsg = msg.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const isProxy = msg.toLowerCase().includes('load failed') || msg.toLowerCase().includes('failed to fetch') || msg.toLowerCase().includes('networkerror');
+  const hint = isProxy
+    ? '«Load failed» / «Failed to fetch» означает, что запрос заблокирован браузером (CORS). Убедитесь, что прокси запущен: <code>node proxy.js</code> в папке проекта.'
+    : 'Проверьте: 1) правильность API-ключа, 2) запущен ли прокси (<code>node proxy.js</code>), 3) формат изображений.';
+  body.innerHTML = `<div class="error-msg"><strong>Ошибка API</strong><br><pre style="margin:6px 0 0;white-space:pre-wrap;font-size:11.5px">${safeMsg}</pre></div>
+  <div style="font-size:12.5px;color:var(--muted);padding:0 4px;">${hint}</div>`;
+}
+
+function togglePose(headEl) {
+  const content = headEl.nextElementSibling;
+  const chev    = headEl.querySelector('.pose-chev');
+  const isOpen  = chev.classList.contains('open');
+  if (isOpen) {
+    content.style.display = 'none';
+    chev.classList.remove('open');
+  } else {
+    content.style.display = 'block';
+    chev.classList.add('open');
+  }
+}
+
+// ─── COPY ─────────────────────────────────────────────────────────────────────
+async function copyResponse() {
+  if (!lastResponse) return;
+  try { await navigator.clipboard.writeText(lastResponse); }
+  catch {
+    const ta = document.createElement('textarea');
+    ta.value = lastResponse; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+  }
+  const btn = document.getElementById('btnCopy');
+  btn.classList.add('is-copied');
+  btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12l6 6L20 6"/></svg> Скопировано';
+  setTimeout(() => {
+    btn.classList.remove('is-copied');
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg> Скопировать ответ';
+  }, 1500);
+  pushToast('Ответ скопирован в буфер обмена');
+}
+
+// ─── UTILS ────────────────────────────────────────────────────────────────────
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload  = e => resolve(e.target.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+let toastTimer = {};
+function pushToast(msg, opts = {}) {
+  const id   = ++toastSeq;
+  const div  = document.createElement('div');
+  div.className = 'toast' + (opts.warn ? ' warn' : '');
+  div.textContent = msg;
+  div.id = 'toast-' + id;
+  document.getElementById('toastStack').appendChild(div);
+  setTimeout(() => { div.remove(); }, 3200);
+}
+
+// ─── RESIZER (horizontal — left/right cols) ─────────────────────────────────
+function initResizer() {
+  const resizer = document.getElementById('resizer');
+  let dragging  = false;
+
+  const savedW = localStorage.getItem('pose-generator-right-col');
+  if (savedW) setRightWidth(+savedW);
+
+  resizer.addEventListener('mousedown', e => {
+    e.preventDefault(); dragging = true;
+    document.body.classList.add('resizing');
+  });
+  window.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const w = Math.min(Math.max(window.innerWidth - e.clientX, 340), Math.min(800, window.innerWidth - 480));
+    setRightWidth(w);
+    localStorage.setItem('pose-generator-right-col', w);
+  });
+  window.addEventListener('mouseup', () => {
+    if (!dragging) return; dragging = false;
+    document.body.classList.remove('resizing');
+  });
+}
+
+function setRightWidth(w) {
+  document.getElementById('appBody').style.gridTemplateColumns = `minmax(0,1fr) 6px ${w}px`;
+}
+
+// ─── ROW RESIZER (vertical — prompt / response) ──────────────────────────────
+function initRowResizer() {
+  const rowResizer  = document.getElementById('rowResizer');
+  const promptPanel = document.getElementById('promptPanel');
+  const rightCol    = document.getElementById('rightCol');
+  let dragging      = false;
+  let startY        = 0;
+  let startH        = 0;
+
+  // Restore saved or default to 40% of right col
+  function applyDefault() {
+    const rh = rightCol.getBoundingClientRect().height;
+    const savedH = localStorage.getItem('pose-generator-prompt-h');
+    setPromptHeight(savedH ? +savedH : Math.max(220, Math.round(rh * 0.42)));
+  }
+  // Apply after layout settles
+  requestAnimationFrame(() => requestAnimationFrame(applyDefault));
+
+  rowResizer.addEventListener('mousedown', e => {
+    e.preventDefault();
+    dragging = true;
+    startY   = e.clientY;
+    startH   = promptPanel.getBoundingClientRect().height;
+    document.body.classList.add('row-resizing');
+  });
+  window.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const rcH  = rightCol.getBoundingClientRect().height;
+    const newH = Math.min(Math.max(startH + (e.clientY - startY), 120), rcH - 120);
+    setPromptHeight(newH);
+    localStorage.setItem('pose-generator-prompt-h', Math.round(newH));
+  });
+  window.addEventListener('mouseup', () => {
+    if (!dragging) return;
+    dragging = false;
+    document.body.classList.remove('row-resizing');
+  });
+}
+
+function setPromptHeight(h) {
+  const p = document.getElementById('promptPanel');
+  p.style.flex   = '0 0 auto';
+  p.style.height = h + 'px';
+}
+
+// ─── HEADER MENUS ─────────────────────────────────────────────────────────────
+function toggleBrandMenu() {
+  const d = document.getElementById('brandDropdown');
+  d.style.display = d.style.display === 'none' ? 'block' : 'none';
+  document.getElementById('llmDropdown').style.display = 'none';
+}
+function toggleLlmMenu() {
+  const d = document.getElementById('llmDropdown');
+  d.style.display = d.style.display === 'none' ? 'block' : 'none';
+  document.getElementById('brandDropdown').style.display = 'none';
+}
+document.addEventListener('click', (e) => {
+  if (!document.getElementById('brandBtn').contains(e.target))
+    document.getElementById('brandDropdown').style.display = 'none';
+  if (!document.getElementById('llmWrap').contains(e.target))
+    document.getElementById('llmDropdown').style.display = 'none';
+});
+
+// ─── RESET ALL ────────────────────────────────────────────────────────────────
+function resetAll() {
+  photoCount = 3;
+  productFiles = [];
+  modelFile = null;
+  manualPrompt = '';
+  lastResponse = '';
+  document.querySelectorAll('.count-btn').forEach(b => b.classList.toggle('is-active', +b.dataset.n === 3));
+  document.getElementById('productFillTag').textContent = '0/3';
+  document.getElementById('modelPreview').style.display = 'none';
+  document.getElementById('modelInner').style.display = 'flex';
+  document.getElementById('modelInput').value = '';
+  document.getElementById('cardModel').classList.remove('is-filled');
+  document.getElementById('cardProduct').classList.remove('is-filled');
+  document.getElementById('responseBody').innerHTML = '';
+  document.getElementById('responseEmpty').style.display = 'flex';
+  document.getElementById('btnCopy').disabled = true;
+  document.getElementById('responseMeta').textContent = '';
+  renderProductGrid();
+  updatePrompt();
+  checkReady();
+}
+
+// ─── INIT RENDER ──────────────────────────────────────────────────────────────
+updatePrompt();
+checkReady();
+</script>
+</body>
+</html>

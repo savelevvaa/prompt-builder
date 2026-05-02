@@ -816,6 +816,43 @@ body.is-col-dragging * { user-select: none !important; }
 <script>// Каталог фильтров. Каждая опция имеет labelRu + promptText (англ., идёт в промт).
 
 window.FILTERS = {
+  referenceTypes: {
+    label: 'Тип референса',
+    hint: 'Что подаем на вход',
+    required: true,
+    multi: true,
+    kind: 'chips',
+    options: [
+      { id: 'product', labelRu: 'Товар', promptText: null },
+      { id: 'model', labelRu: 'Модель', promptText: null },
+    ],
+  },
+  productPhotoCount: {
+    label: 'Количество фото продукта',
+    required: true,
+    kind: 'chips',
+    options: [
+      { id: '1', labelRu: '1', promptText: '1' },
+      { id: '2', labelRu: '2', promptText: '2' },
+      { id: '3', labelRu: '3', promptText: '3' },
+      { id: '4', labelRu: '4', promptText: '4' },
+      { id: '5', labelRu: '5', promptText: '5' },
+      { id: '6', labelRu: '6', promptText: '6' },
+    ],
+  },
+  modelPhotoCount: {
+    label: 'Количество фото модели',
+    required: true,
+    kind: 'chips',
+    options: [
+      { id: '1', labelRu: '1', promptText: '1' },
+      { id: '2', labelRu: '2', promptText: '2' },
+      { id: '3', labelRu: '3', promptText: '3' },
+      { id: '4', labelRu: '4', promptText: '4' },
+      { id: '5', labelRu: '5', promptText: '5' },
+      { id: '6', labelRu: '6', promptText: '6' },
+    ],
+  },
   gender: {
     label: 'Пол модели',
     required: true,
@@ -1264,6 +1301,12 @@ window.FILTERS = {
 // Структура секций для левой колонки
 window.SECTIONS = [
   {
+    id: 'inputs',
+    title: 'Входные данные',
+    caption: 'Что подаем на вход',
+    steps: ['referenceTypes', 'productPhotoCount', 'modelPhotoCount'],
+  },
+  {
     id: 'model',
     title: 'Модель',
     caption: 'Кто носит одежду',
@@ -1478,6 +1521,10 @@ FINAL PRIORITY:
         return !isRef;
       case 'hairColor':
         return !isRef && !!state.hairLength && state.hairLength !== 'bald';
+      case 'productPhotoCount':
+        return (state.referenceTypes || ['product']).includes('product');
+      case 'modelPhotoCount':
+        return (state.referenceTypes || ['product']).includes('model');
       case 'facialHair':
         return state.gender === 'male';
       case 'featuresOverride':
@@ -1561,10 +1608,37 @@ FINAL PRIORITY:
 
   // ---- Сборка INPUT_BLOCK ----
   function buildInputBlock(s) {
-    if (s.gender === 'from_reference') {
-      return `- Images 1–2: reference photos of the fashion model whose appearance should be used.\n- Images 3–5: photos of the SAME garment/product from different angles.\n- The garment may be shown on a person, mannequin, hanger, or flat lay.`;
+    const types = s.referenceTypes || ['product'];
+    const hasModel = types.includes('model');
+    const hasProduct = types.includes('product');
+    const mc = parseInt(s.modelPhotoCount || '1', 10);
+    const pc = parseInt(s.productPhotoCount || '2', 10);
+
+    const lines = [];
+    let idx = 1;
+
+    if (hasModel) {
+      const end = idx + mc - 1;
+      const range = mc === 1 ? `Image ${idx}` : `Images ${idx}–${end}`;
+      const noun = mc === 1 ? 'a reference photo' : 'reference photos';
+      lines.push(`- ${range}: ${noun} of the fashion model whose appearance should be used.`);
+      idx = end + 1;
     }
-    return `- Images 1–3: photos of the SAME garment/product from different angles.\n- The garment may be shown on a person, mannequin, hanger, or flat lay.`;
+
+    if (hasProduct) {
+      const end = idx + pc - 1;
+      const range = pc === 1 ? `Image ${idx}` : `Images ${idx}–${end}`;
+      const noun = pc === 1 ? 'a photo' : 'photos';
+      const angles = pc === 1 ? '' : ' from different angles';
+      lines.push(`- ${range}: ${noun} of the SAME garment/product${angles}.`);
+      lines.push(`- The garment may be shown on a person, mannequin, hanger, or flat lay.`);
+    }
+
+    if (!lines.length) {
+      return `- Images 1–2: photos of the SAME garment/product from different angles.\n- The garment may be shown on a person, mannequin, hanger, or flat lay.`;
+    }
+
+    return lines.join('\n');
   }
 
   // ---- Сборка MODEL_TYPE ----
@@ -2209,6 +2283,9 @@ const STORAGE_KEY = 'prompt-builder-state-v2';
 const PRESETS_KEY = 'prompt-builder-presets-v1';
 
 const DEFAULT_STATE = {
+  referenceTypes: ['product'],
+  productPhotoCount: '2',
+  modelPhotoCount: '1',
   gender: '', ageGroup: '', ethnicity: '', bodyType: '',
   hairLength: '', hairColor: '', facialHair: '', features: [], featuresOverride: '',
   productGender: '',
@@ -2245,6 +2322,7 @@ const Icon = {
 };
 
 const GEN_MODELS = [
+  { name: 'AI Generator', url: 'https://wavespeed.ai/image-generator' },
   { name: 'Nano Banana 2', url: 'https://wavespeed.ai/models/google/nano-banana-2/edit' },
   { name: 'GPT-Image 2', url: 'https://wavespeed.ai/models/openai/gpt-image-2/edit' },
   { name: 'Seedream v5.0 Lite', url: 'https://wavespeed.ai/models/bytedance/seedream-v5.0-lite' },
@@ -2254,23 +2332,42 @@ const GEN_MODELS = [
 
 // ---------- Header ----------
 function Header({ progress, onOpenPresets, onResetAll }) {
-  const [genOpen, setGenOpen] = React.useState(false);
-  const genRef = React.useRef(null);
+  const [genOpen, setGenOpen]   = React.useState(false);
+  const [brandOpen, setBrandOpen] = React.useState(false);
+  const genRef   = React.useRef(null);
+  const brandRef = React.useRef(null);
 
   React.useEffect(() => {
-    if (!genOpen) return;
-    const handler = (e) => { if (genRef.current && !genRef.current.contains(e.target)) setGenOpen(false); };
+    const handler = (e) => {
+      if (genRef.current && !genRef.current.contains(e.target)) setGenOpen(false);
+      if (brandRef.current && !brandRef.current.contains(e.target)) setBrandOpen(false);
+    };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
-  }, [genOpen]);
+  }, []);
+
+  const PAGES = [
+    { label: 'Конструктор образа', href: 'index.html', active: true },
+    { label: 'Генератор поз', href: 'pose_promt_generator.html', active: false },
+    { label: 'Конструктор промта поз', href: null, active: false },
+  ];
 
   return (
     <header className="app-header">
-      <div className="brand">
+      <div className="brand" ref={brandRef} onClick={() => setBrandOpen(v => !v)} style={{cursor:'pointer',position:'relative'}}>
         <span className="brand-mark" />
         <span>Prompt Builder</span>
         <span className="brand-slash">/</span>
         <span className="brand-sub">fashion marketplace</span>
+        {brandOpen && (
+          <div className="gen-dropdown" style={{left:0,right:'auto',top:'calc(100% + 14px)'}}>
+            <div className="gen-dropdown-head">Инструменты</div>
+            {PAGES.map(p => p.href
+              ? <a key={p.label} href={p.href} className="gen-item" style={p.active ? {fontWeight:500,color:'var(--accent)'} : {}}><span>{p.label}</span></a>
+              : <span key={p.label} className="gen-item" style={{opacity:0.4,cursor:'not-allowed'}}>{p.label}</span>
+            )}
+          </div>
+        )}
       </div>
       <div className="header-progress">
         <div className="progress-track">
@@ -2333,8 +2430,8 @@ function Outline({ sections, state, activeSection }) {
           const isActive = activeSection === sec.id;
           return (
             <a key={sec.id} href={`#sec-${sec.id}`} className={isActive ? 'is-active' : ''}>
-              <span>{String(i + 1).padStart(2, '0')} {sec.title}</span>
-              <span className="outline-count">{c.filled}/{c.total}</span>
+              <span>{String(i).padStart(2, '0')} {sec.title}</span>
+              {c.total > 0 && <span className="outline-count">{c.filled}/{c.total}</span>}
             </a>
           );
         })}
@@ -2365,6 +2462,53 @@ function ColResizer({ onResize }) {
       onMouseDown={(e) => { e.preventDefault(); setDragging(true); }}
       title="Перетащите, чтобы изменить ширину превью"
     />
+  );
+}
+
+// ---------- Inputs Section ----------
+function InputsSection({ state, setValue, flash }) {
+  const F = window.FILTERS;
+  const types = state.referenceTypes || ['product'];
+
+  const handleTypesChange = (newTypes) => {
+    const withProduct = newTypes.length === 0 ? ['product'] : newTypes.includes('product') ? newTypes : ['product', ...newTypes.filter(t => t !== 'product')];
+    setValue('referenceTypes', withProduct);
+  };
+
+  return (
+    <>
+      <StepCard
+        stepId="referenceTypes"
+        step={F.referenceTypes}
+        value={types}
+        options={window.getVisibleOptions('referenceTypes', state)}
+        onChange={handleTypesChange}
+        onClear={() => setValue('referenceTypes', ['product'])}
+        flash={flash === 'referenceTypes'}
+      />
+      {types.includes('product') && (
+        <StepCard
+          stepId="productPhotoCount"
+          step={F.productPhotoCount}
+          value={state.productPhotoCount || '2'}
+          options={window.getVisibleOptions('productPhotoCount', state)}
+          onChange={(v) => setValue('productPhotoCount', v)}
+          onClear={() => setValue('productPhotoCount', '2')}
+          flash={flash === 'productPhotoCount'}
+        />
+      )}
+      {types.includes('model') && (
+        <StepCard
+          stepId="modelPhotoCount"
+          step={F.modelPhotoCount}
+          value={state.modelPhotoCount || '1'}
+          options={window.getVisibleOptions('modelPhotoCount', state)}
+          onChange={(v) => setValue('modelPhotoCount', v)}
+          onClear={() => setValue('modelPhotoCount', '1')}
+          flash={flash === 'modelPhotoCount'}
+        />
+      )}
+    </>
   );
 }
 
@@ -2535,6 +2679,26 @@ function App() {
   const setValue = uCB((stepId, newVal) => {
     setState((prev) => {
       const next = { ...prev, [stepId]: newVal };
+      // Двусторонняя синхронизация: referenceTypes.model ↔ gender.from_reference
+      if (stepId === 'referenceTypes') {
+        const newHasModel = Array.isArray(newVal) && newVal.includes('model');
+        const prevHasModel = (prev.referenceTypes || []).includes('model');
+        if (newHasModel && !prevHasModel) {
+          next.gender = 'from_reference';
+          window.cleanupAfterChange(next, 'gender');
+        } else if (!newHasModel && prevHasModel && prev.gender === 'from_reference') {
+          next.gender = '';
+        }
+      }
+      if (stepId === 'gender') {
+        const rt = prev.referenceTypes || ['product'];
+        if (newVal === 'from_reference') {
+          if (!rt.includes('model')) next.referenceTypes = [...rt, 'model'];
+        } else if (prev.gender === 'from_reference') {
+          const filtered = rt.filter(t => t !== 'model');
+          next.referenceTypes = filtered.length ? filtered : ['product'];
+        }
+      }
       // При изменении features — авто-заполняем featuresOverride собранным текстом
       if (stepId === 'features' && Array.isArray(newVal)) {
         const texts = newVal
@@ -2555,6 +2719,10 @@ function App() {
 
   // Проверка: есть ли в секции хотя бы одно заполненное поле (отличное от дефолта)
   const isSectionFilled = (sec) => {
+    if (sec.id === 'inputs') {
+      const types = state.referenceTypes || ['product'];
+      return types.includes('model') || state.productPhotoCount !== '2';
+    }
     if (sec.id === 'product') {
       return !!state.productGender || (state.productCategories || []).length > 0 || !!state.productDetails;
     }
@@ -2576,6 +2744,7 @@ function App() {
         next[stepId] = def !== undefined ? def : (window.FILTERS[stepId]?.multi ? [] : '');
       });
       if (sec.id === 'product') next.productItems = {};
+      if (sec.id === 'inputs' && prev.gender === 'from_reference') next.gender = '';
       return next;
     });
   }, []);
@@ -2686,9 +2855,9 @@ function App() {
         </div>
 
         {window.SECTIONS.map((sec, i) => (
-          <section key={sec.id} id={`sec-${sec.id}`} className="section" data-screen-label={`0${i + 1} ${sec.title}`}>
+          <section key={sec.id} id={`sec-${sec.id}`} className="section" data-screen-label={`0${i} ${sec.title}`}>
             <div className="section-head">
-              <span className="section-num">{String(i + 1).padStart(2, '0')}</span>
+              <span className="section-num">{String(i).padStart(2, '0')}</span>
               <h2 className="section-title">{sec.title}</h2>
               {isSectionFilled(sec) && (
                 <button className="section-reset-btn" onClick={() => resetSection(sec)}>Сбросить раздел</button>
@@ -2696,8 +2865,14 @@ function App() {
               <span className="section-caption">{sec.caption}</span>
             </div>
 
-            {/* Секция ПРОДУКТ рендерится отдельно */}
-            {sec.id === 'product' ? (
+            {/* Секции ВХОДНЫЕ ДАННЫЕ и ПРОДУКТ рендерятся отдельно */}
+            {sec.id === 'inputs' ? (
+              <InputsSection
+                state={state}
+                setValue={setValue}
+                flash={flashed}
+              />
+            ) : sec.id === 'product' ? (
               <ProductSection
                 state={state}
                 setValue={setValue}

@@ -29,6 +29,10 @@
         return !isRef;
       case 'hairColor':
         return !isRef && !!state.hairLength && state.hairLength !== 'bald';
+      case 'productPhotoCount':
+        return (state.referenceTypes || ['product']).includes('product');
+      case 'modelPhotoCount':
+        return (state.referenceTypes || ['product']).includes('model');
       case 'facialHair':
         return state.gender === 'male';
       case 'featuresOverride':
@@ -112,10 +116,37 @@
 
   // ---- Сборка INPUT_BLOCK ----
   function buildInputBlock(s) {
-    if (s.gender === 'from_reference') {
-      return `- Images 1–2: reference photos of the fashion model whose appearance should be used.\n- Images 3–5: photos of the SAME garment/product from different angles.\n- The garment may be shown on a person, mannequin, hanger, or flat lay.`;
+    const types = s.referenceTypes || ['product'];
+    const hasModel = types.includes('model');
+    const hasProduct = types.includes('product');
+    const mc = parseInt(s.modelPhotoCount || '1', 10);
+    const pc = parseInt(s.productPhotoCount || '2', 10);
+
+    const lines = [];
+    let idx = 1;
+
+    if (hasModel) {
+      const end = idx + mc - 1;
+      const range = mc === 1 ? `Image ${idx}` : `Images ${idx}–${end}`;
+      const noun = mc === 1 ? 'a reference photo' : 'reference photos';
+      lines.push(`- ${range}: ${noun} of the fashion model whose appearance should be used.`);
+      idx = end + 1;
     }
-    return `- Images 1–3: photos of the SAME garment/product from different angles.\n- The garment may be shown on a person, mannequin, hanger, or flat lay.`;
+
+    if (hasProduct) {
+      const end = idx + pc - 1;
+      const range = pc === 1 ? `Image ${idx}` : `Images ${idx}–${end}`;
+      const noun = pc === 1 ? 'a photo' : 'photos';
+      const angles = pc === 1 ? '' : ' from different angles';
+      lines.push(`- ${range}: ${noun} of the SAME garment/product${angles}.`);
+      lines.push(`- The garment may be shown on a person, mannequin, hanger, or flat lay.`);
+    }
+
+    if (!lines.length) {
+      return `- Images 1–2: photos of the SAME garment/product from different angles.\n- The garment may be shown on a person, mannequin, hanger, or flat lay.`;
+    }
+
+    return lines.join('\n');
   }
 
   // ---- Сборка MODEL_TYPE ----
