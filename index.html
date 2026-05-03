@@ -893,6 +893,37 @@ window.FILTERS = {
       { id: 'mixed', labelRu: 'Смешанная', promptText: 'mixed-race' },
     ],
   },
+  skinColor: {
+    label: 'Цвет кожи',
+    optional: true,
+    kind: 'grid',
+    options: [
+      { id: 'porcelain',   labelRu: 'Фарфоровый',       promptText: 'porcelain skin',        swatch: '#f5e4d2' },
+      { id: 'fair',        labelRu: 'Светлый',           promptText: 'fair skin',              swatch: '#f0ceaa' },
+      { id: 'light',       labelRu: 'Светло-бежевый',   promptText: 'light beige skin',       swatch: '#e8b98a' },
+      { id: 'beige',       labelRu: 'Бежевый',           promptText: 'warm beige skin',        swatch: '#d4a06a' },
+      { id: 'olive',       labelRu: 'Оливковый',         promptText: 'olive skin',             swatch: '#c08050' },
+      { id: 'tan',         labelRu: 'Загорелый',         promptText: 'tan skin',               swatch: '#a86838' },
+      { id: 'brown',       labelRu: 'Коричневый',        promptText: 'medium brown skin',      swatch: '#7a4a28' },
+      { id: 'dark_brown',  labelRu: 'Тёмно-коричневый', promptText: 'deep brown skin',        swatch: '#4a2810' },
+      { id: 'deep',        labelRu: 'Тёмный',            promptText: 'very deep dark skin',    swatch: '#2a1408' },
+    ],
+  },
+  eyeColor: {
+    label: 'Цвет глаз',
+    optional: true,
+    kind: 'grid',
+    options: [
+      { id: 'brown',       labelRu: 'Карие',             promptText: 'brown eyes',             swatch: '#6b4220' },
+      { id: 'dark_brown',  labelRu: 'Тёмно-карие',      promptText: 'dark brown eyes',        swatch: '#2e1508' },
+      { id: 'hazel',       labelRu: 'Ореховые',          promptText: 'hazel eyes',             swatch: '#7a6030' },
+      { id: 'amber',       labelRu: 'Янтарные',          promptText: 'amber eyes',             swatch: '#c08820' },
+      { id: 'green',       labelRu: 'Зелёные',           promptText: 'green eyes',             swatch: '#3a7040' },
+      { id: 'blue',        labelRu: 'Голубые',           promptText: 'blue eyes',              swatch: '#3a68a8' },
+      { id: 'grey',        labelRu: 'Серые',             promptText: 'grey eyes',              swatch: '#6a7a88' },
+      { id: 'black',       labelRu: 'Тёмные',            promptText: 'dark nearly-black eyes', swatch: '#1a1008' },
+    ],
+  },
   bodyType: {
     label: 'Телосложение',
     optional: true,
@@ -1310,7 +1341,7 @@ window.SECTIONS = [
     id: 'model',
     title: 'Модель',
     caption: 'Кто носит одежду',
-    steps: ['gender', 'ageGroup', 'ethnicity', 'bodyType', 'hairLength', 'hairColor', 'facialHair', 'features', 'featuresOverride'],
+    steps: ['gender', 'ageGroup', 'ethnicity', 'skinColor', 'eyeColor', 'bodyType', 'hairLength', 'hairColor', 'facialHair', 'features', 'featuresOverride'],
   },
   {
     id: 'product',
@@ -1515,6 +1546,8 @@ FINAL PRIORITY:
       // Параметры модели — скрыты при «С референса»
       case 'ageGroup':
       case 'ethnicity':
+      case 'skinColor':
+      case 'eyeColor':
       case 'bodyType':
       case 'hairLength':
       case 'features':
@@ -1595,7 +1628,7 @@ FINAL PRIORITY:
     };
 
     const dependents = {
-      gender: ['ageGroup', 'ethnicity', 'bodyType', 'hairLength', 'hairColor', 'facialHair', 'features', 'featuresOverride'],
+      gender: ['ageGroup', 'ethnicity', 'skinColor', 'eyeColor', 'bodyType', 'hairLength', 'hairColor', 'facialHair', 'features', 'featuresOverride'],
       hairLength: ['hairColor'],
       features: ['featuresOverride'],
       locationMode: ['locationType', 'locationSpecific', 'season', 'timeOfDay'],
@@ -1648,17 +1681,18 @@ FINAL PRIORITY:
     }
 
     const gender = opt('gender', s.gender);
-    const age = opt('ageGroup', s.ageGroup);
-    const ethn = opt('ethnicity', s.ethnicity);
-    const body = opt('bodyType', s.bodyType);
-    const hairL = opt('hairLength', s.hairLength);
-    const hairC = opt('hairColor', s.hairColor);
+    const age    = opt('ageGroup',   s.ageGroup);
+    const ethn   = opt('ethnicity',  s.ethnicity);
+    const skinC  = opt('skinColor',  s.skinColor);
+    const eyeC   = opt('eyeColor',   s.eyeColor);
+    const body   = opt('bodyType',   s.bodyType);
+    const hairL  = opt('hairLength', s.hairLength);
+    const hairC  = opt('hairColor',  s.hairColor);
     const facial = opt('facialHair', s.facialHair);
     const features = (s.features || []).map((id) => opt('features', id)).filter(Boolean);
 
     if (!gender) return null;
 
-    // e.g. "a young adult (20–29 years old) slavic man"
     const parts = [];
     if (age) parts.push(age.promptText);
     if (ethn) parts.push(ethn.promptText);
@@ -1666,6 +1700,10 @@ FINAL PRIORITY:
 
     const extras = [];
     if (body) extras.push(body.promptText);
+
+    if (skinC && eyeC) extras.push(`with ${skinC.promptText} and ${eyeC.promptText}`);
+    else if (skinC)    extras.push(`with ${skinC.promptText}`);
+    else if (eyeC)     extras.push(`with ${eyeC.promptText}`);
 
     if (hairL) {
       if (hairL.id === 'bald') extras.push('with a shaved head');
@@ -2286,7 +2324,7 @@ const DEFAULT_STATE = {
   referenceTypes: ['product'],
   productPhotoCount: '2',
   modelPhotoCount: '1',
-  gender: '', ageGroup: '', ethnicity: '', bodyType: '',
+  gender: '', ageGroup: '', ethnicity: '', skinColor: '', eyeColor: '', bodyType: '',
   hairLength: '', hairColor: '', facialHair: '', features: [], featuresOverride: '',
   productGender: '',
   productCategories: [],

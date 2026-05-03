@@ -23,6 +23,8 @@
       // Параметры модели — скрыты при «С референса»
       case 'ageGroup':
       case 'ethnicity':
+      case 'skinColor':
+      case 'eyeColor':
       case 'bodyType':
       case 'hairLength':
       case 'features':
@@ -103,7 +105,7 @@
     };
 
     const dependents = {
-      gender: ['ageGroup', 'ethnicity', 'bodyType', 'hairLength', 'hairColor', 'facialHair', 'features', 'featuresOverride'],
+      gender: ['ageGroup', 'ethnicity', 'skinColor', 'eyeColor', 'bodyType', 'hairLength', 'hairColor', 'facialHair', 'features', 'featuresOverride'],
       hairLength: ['hairColor'],
       features: ['featuresOverride'],
       locationMode: ['locationType', 'locationSpecific', 'season', 'timeOfDay'],
@@ -158,6 +160,8 @@
     const gender = opt('gender', s.gender);
     const age = opt('ageGroup', s.ageGroup);
     const ethn = opt('ethnicity', s.ethnicity);
+    const skinC = opt('skinColor', s.skinColor);
+    const eyeC  = opt('eyeColor',  s.eyeColor);
     const body = opt('bodyType', s.bodyType);
     const hairL = opt('hairLength', s.hairLength);
     const hairC = opt('hairColor', s.hairColor);
@@ -166,7 +170,6 @@
 
     if (!gender) return null;
 
-    // e.g. "a young adult (20–29 years old) slavic man"
     const parts = [];
     if (age) parts.push(age.promptText);
     if (ethn) parts.push(ethn.promptText);
@@ -174,6 +177,11 @@
 
     const extras = [];
     if (body) extras.push(body.promptText);
+
+    // skin + eyes grouped naturally
+    if (skinC && eyeC) extras.push(`with ${skinC.promptText} and ${eyeC.promptText}`);
+    else if (skinC)    extras.push(`with ${skinC.promptText}`);
+    else if (eyeC)     extras.push(`with ${eyeC.promptText}`);
 
     if (hairL) {
       if (hairL.id === 'bald') extras.push('with a shaved head');
